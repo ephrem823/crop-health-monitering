@@ -37,3 +37,10 @@ __pycache__/
 # OS
 .DS_Store
 Thumbs.db
+node_modules/
+backend/venv/
+backend/models/*.h5
+*.pyc
+__pycache__/
+.env
+*.db
