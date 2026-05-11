@@ -1,15 +1,34 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, ShieldCheck, Zap, Activity } from 'lucide-react';
+import { ArrowRight, ShieldCheck, Zap, Activity, Database } from 'lucide-react';
 import { Button } from './ui/button';
+import { getHistory } from '../services/api';
 
 interface HeroProps {
   onStart: () => void;
 }
 
 const Hero: React.FC<HeroProps> = ({ onStart }) => {
+  const [dbCount, setDbCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    getHistory(1000).then(data => {
+      setDbCount(data.history?.length || 0);
+    }).catch(() => setDbCount(0));
+  }, []);
+
   return (
     <div className="relative overflow-hidden bg-white pt-16 pb-24 lg:pt-32 lg:pb-40">
+      {/* Database Info Badge */}
+      {dbCount !== null && (
+        <div className="absolute top-4 right-4 z-20">
+          <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-md border border-emerald-200">
+            <Database className="h-4 w-4 text-emerald-600" />
+            <span className="text-sm font-medium text-emerald-900">{dbCount} diagnoses</span>
+          </div>
+        </div>
+      )}
+
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-emerald-50/50" />
         <img 

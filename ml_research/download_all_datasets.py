@@ -14,6 +14,15 @@ except ImportError:
     os.system("pip install kagglehub")
     import kagglehub
 
+try:
+    import requests
+    import zipfile
+except ImportError:
+    print("Installing requests...")
+    os.system("pip install requests")
+    import requests
+    import zipfile
+
 # Setup directories
 BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR / "data"
@@ -29,6 +38,10 @@ DATASETS = {
     "tomato": "kaustubhb999/tomatoleaf",
     "maize": "smaranjitghose/corn-or-maize-leaf-disease-dataset"
 }
+
+# Additional datasets
+FIGSHARE_URL = "https://doi.org/10.6084/m9.figshare.29298275"
+TOMATO_LEAF_DATASET_URL = "https://doi.org/10.1016/j.dib.2025.111520"  # Imtiaz et al. 2025
 
 def normalize_class_name(name, crop_type):
     """Normalize class names to standard format"""
@@ -89,6 +102,21 @@ def organize_dataset(downloaded_path, crop_type):
                 
                 print(f"    Train: {len(train_images)} | Val: {len(val_images)}")
 
+def download_figshare_dataset():
+    """Download dataset from Figshare"""
+    print(f"\n[FIGSHARE] Additional dataset available...")
+    print(f"  URL: {FIGSHARE_URL}")
+    print(f"  Note: Please download manually from the URL above.")
+    print(f"  Extract to: {DATA_DIR}")
+
+def download_tomato_leaf_dataset():
+    """Download Tomato Leaf Dataset (Imtiaz et al. 2025)"""
+    print(f"\n[TOMATO LEAF DATASET] Additional tomato dataset available...")
+    print(f"  Reference: Imtiaz A, et al. (2025) Data Brief. 60:111520")
+    print(f"  DOI: {TOMATO_LEAF_DATASET_URL}")
+    print(f"  Note: Please download manually from the DOI link above.")
+    print(f"  Extract to: {DATA_DIR}")
+
 # Main download process
 print("="*60)
 print("UNIFIED DATASET DOWNLOADER")
@@ -103,6 +131,12 @@ for crop_type, dataset_name in DATASETS.items():
     except Exception as e:
         print(f"  ERROR: {e}")
         continue
+
+# Download Figshare dataset
+download_figshare_dataset()
+
+# Download Tomato Leaf Dataset
+download_tomato_leaf_dataset()
 
 # Summary
 train_classes = sorted([d.name for d in TRAIN_DIR.iterdir() if d.is_dir()])

@@ -4,7 +4,7 @@ from pathlib import Path
 from datetime import datetime
 
 # Get absolute path for database
-BASE_DIR = Path(__file__).resolve().parent  # backend_new/app/
+BASE_DIR = Path(__file__).resolve().parent  # backend/app/
 DB_PATH = BASE_DIR / "database.db"
 
 def init_db():

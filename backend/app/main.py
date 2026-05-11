@@ -45,10 +45,16 @@ model: tf.keras.Model | None = None
 @app.on_event("startup")
 def load_model():
     global model
-    init_db()  # Initialize database
+    init_db()
     if os.path.exists(MODEL_PATH):
-        model = tf.keras.models.load_model(MODEL_PATH)
+        model = tf.keras.models.load_model(MODEL_PATH, compile=False)
         print(f"✅ Model loaded from {MODEL_PATH}")
+        # Warn about CPU-only inference speed
+        gpus = tf.config.list_physical_devices('GPU')
+        if not gpus:
+            print("⚠️  No GPU detected — running on CPU. Predictions may take ~8s per image.")
+        else:
+            print(f"✅ GPU detected: {gpus}")
     else:
         print(f"⚠️  Model file not found at '{MODEL_PATH}'. Run ml/train.py first.")
 
@@ -85,6 +91,21 @@ async def predict(file: UploadFile = File(...)):
         pil_image, img_array = preprocess_image(file_bytes)
         class_name, confidence, class_idx = run_inference(model, img_array)
         
+        # Check if model returned Unknown (index out of range)
+        if class_name == "Unknown":
+            return {
+                "class": "Unknown",
+                "confidence": round(confidence, 4),
+                "treatment": (
+                    f"⚠️ Model Configuration Error\n\n"
+                    f"The model predicted a class that doesn't exist in the system. "
+                    f"This usually means the model was trained with different classes than configured. "
+                    f"Please retrain the model or check the CLASS_NAMES configuration."
+                ),
+                "enhanced_treatment": None,
+                "heatmap": None,
+            }
+        
         # Check if confidence is too low (unknown crop)
         CONFIDENCE_THRESHOLD = 0.75  # 75% minimum confidence
         if confidence < CONFIDENCE_THRESHOLD:
@@ -109,8 +130,9 @@ async def predict(file: UploadFile = File(...)):
         heatmap_b64 = heatmap_to_base64(pil_image, heatmap)
         
         # Save to database
-        crop_name = class_name.split("_")[0]
-        disease_name = "_".join(class_name.split("_")[1:])
+        parts = class_name.split("_")
+        crop_name = parts[0] if parts else "Unknown"
+        disease_name = "_".join(parts[1:]) if len(parts) > 1 else "Unknown"
         save_diagnosis(crop_name, disease_name, confidence)
         
         # Get enhanced treatment from Gemini

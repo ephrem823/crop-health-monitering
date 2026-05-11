@@ -6,11 +6,7 @@ interface HeaderProps {
   onNavigate: (page: string) => void;
   currentPage: string;
 }
-<img 
-  src="/haramaya-logo.png"  // This MUST match the filename in your /public folder
-  alt="Haramaya University Logo" 
-  className="h-full w-full object-contain"
-/>
+
 const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage }) => {
   const [isOpen, setIsOpen] = useState(false);
 

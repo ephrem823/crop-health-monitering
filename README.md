@@ -8,7 +8,7 @@ AI-powered crop disease detection for Ethiopian farmers. Upload a leaf photo and
 
 ```
 ethio_crop_guard/
-├── backend_new/              # FastAPI backend
+├── backend/                  # FastAPI backend
 │   ├── app/                  # API code
 │   └── models/               # Trained model (.h5)
 ├── frontend/                 # React frontend
@@ -54,7 +54,7 @@ cd ml_research/scripts
 python train.py
 ```
 
-Model saves to: `backend_new/models/crop_health_model.h5`
+Model saves to: `backend/models/crop_health_model.h5`
 
 ---
 
@@ -96,7 +96,7 @@ This starts:
 
 ## 💾 Database
 
-SQLite database at `backend_new/app/database.db` stores:
+SQLite database at `backend/app/database.db` stores:
 - Diagnosis history
 - Crop and disease names
 - Confidence scores
@@ -106,10 +106,11 @@ SQLite database at `backend_new/app/database.db` stores:
 
 ## 🤖 AI Features
 
-- **Model**: EfficientNet-B0 (Transfer Learning)
+- **Model**: PlantDiseaseProV1 (EfficientNet-B0 based)
+- **Input Size**: 240×240 pixels
 - **Grad-CAM**: Visual explanation of predictions
 - **Gemini AI**: Enhanced treatment advice in Amharic
-- **Confidence Threshold**: Rejects unknown crops (<60%)
+- **Confidence Threshold**: Rejects unknown crops (<75%)
 
 ---
 
@@ -127,7 +128,7 @@ python export_database.py
 
 ## 🔑 Environment Variables
 
-**Backend** (`backend_new/.env`):
+**Backend** (`backend/.env`):
 ```
 GEMINI_API_KEY=your_api_key_here
 ```

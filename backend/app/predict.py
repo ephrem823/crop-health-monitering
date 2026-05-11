@@ -7,8 +7,6 @@ Handles image preprocessing and running inference with the loaded model.
 import io
 import numpy as np
 from PIL import Image
-import tensorflow as tf
-preprocess_input = tf.keras.applications.efficientnet.preprocess_input
 
 from app.config import IMG_SIZE, CLASS_NAMES, TREATMENT_ADVICE, HEALTHY_ADVICE
 
@@ -22,9 +20,9 @@ def preprocess_image(file_bytes: bytes) -> tuple[Image.Image, np.ndarray]:
     image = Image.open(io.BytesIO(file_bytes)).convert("RGB")
     image = image.resize(IMG_SIZE)
 
-    img_array = np.array(image)                        # shape: (224, 224, 3)
-    img_array = np.expand_dims(img_array, axis=0)      # shape: (1, 224, 224, 3)
-    img_array = preprocess_input(img_array)            # EfficientNet normalisation
+    img_array = np.array(image, dtype=np.float32)      # shape: (240, 240, 3)
+    img_array = np.expand_dims(img_array, axis=0)      # shape: (1, 240, 240, 3)
+    # Model has built-in preprocessing (rescaling layer), no need for manual preprocessing
 
     return image, img_array
 
@@ -39,7 +37,15 @@ def run_inference(model, img_array: np.ndarray) -> tuple[str, float, int]:
     predictions = model.predict(img_array)          # shape: (1, num_classes)
     class_idx = int(np.argmax(predictions[0]))
     confidence = float(predictions[0][class_idx])
-    class_name = CLASS_NAMES[class_idx]
+    
+    # Safety check: ensure class_idx is within bounds
+    if class_idx >= len(CLASS_NAMES):
+        print(f"⚠️  Model predicted class index {class_idx}, but only {len(CLASS_NAMES)} classes defined.")
+        print(f"   Model output shape: {predictions.shape}")
+        class_name = "Unknown"
+    else:
+        class_name = CLASS_NAMES[class_idx]
+    
     return class_name, confidence, class_idx
 
 

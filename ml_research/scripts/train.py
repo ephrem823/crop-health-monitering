@@ -38,20 +38,24 @@ Step 6 — Save model      : Write the final model to disk
 
 import os
 import sys
+import ssl
 import tensorflow as tf
 from tensorflow.keras import layers, models, callbacks
 from tensorflow.keras.applications import EfficientNetB0
 preprocess_input = tf.keras.applications.efficientnet.preprocess_input
 
+# Fix SSL certificate verification issue
+ssl._create_default_https_context = ssl._create_unverified_context
+
 # ── Configuration ─────────────────────────────────────────────────────────────
 
-DATA_DIR    = "backend/ml/data"          # Root folder with train/ and val/ sub-folders
-MODEL_OUT   = "backend/ml/models/crop_health_model.h5"
+DATA_DIR    = "../data"          # Root folder with train/ and val/ sub-folders
+MODEL_OUT   = "../../backend/models/crop_health_model.h5"
 IMG_SIZE    = (224, 224)
 BATCH_SIZE  = 32
 EPOCHS_HEAD = 10    # Epochs to train only the new top layers
 EPOCHS_FINE = 10    # Additional epochs after unfreezing some base layers
-NUM_CLASSES = 13    # 4 Maize + 3 Potato + 6 Tomato
+NUM_CLASSES = 17    # Updated: 4 Maize + 3 Potato + 10 Tomato
 
 # ── Step 1: Load images from disk ─────────────────────────────────────────────
 

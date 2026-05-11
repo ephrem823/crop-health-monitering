@@ -10,7 +10,6 @@ Enhances treatment advice with:
 
 import os
 from pathlib import Path
-import google.generativeai as genai
 from typing import Optional
 
 # Load environment variables from .env file
@@ -21,16 +20,26 @@ try:
 except ImportError:
     print("⚠️  python-dotenv not installed. Install with: pip install python-dotenv")
 
-# Configure Gemini API
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-pro')
-    print(f"✅ Gemini API configured successfully")
-else:
+# Use new google.genai SDK
+try:
+    from google import genai
+    from google.genai import types
+
+    if GEMINI_API_KEY:
+        client = genai.Client(api_key=GEMINI_API_KEY)
+        model = client
+        print("✅ Gemini API configured successfully (google.genai)")
+    else:
+        client = None
+        model = None
+        print("⚠️  GEMINI_API_KEY not set. Using basic treatment advice.")
+
+except ImportError:
+    client = None
     model = None
-    print("⚠️  GEMINI_API_KEY not set. Using basic treatment advice.")
+    print("⚠️  google-genai not installed. Run: pip install google-genai")
 
 
 def get_enhanced_treatment(crop_name: str, disease_name: str, base_treatment: str) -> dict:
@@ -41,8 +50,8 @@ def get_enhanced_treatment(crop_name: str, disease_name: str, base_treatment: st
     - Organic/compost solutions
     - Cultural context
     """
-    
-    if not model:
+
+    if not client:
         return {
             "amharic": "የጀሚኒ ኤፒአይ ቁልፍ አልተዘጋጀም።",
             "english": base_treatment,
@@ -51,9 +60,8 @@ def get_enhanced_treatment(crop_name: str, disease_name: str, base_treatment: st
             "organic": "Use organic compost and natural pest control methods.",
             "prevention": "Practice crop rotation and maintain good field hygiene."
         }
-    
-    prompt = f"""
-You are an agricultural expert specializing in Ethiopian farming practices.
+
+    prompt = f"""You are an agricultural expert specializing in Ethiopian farming practices.
 
 Crop: {crop_name}
 Disease: {disease_name}
@@ -61,43 +69,35 @@ Basic Treatment: {base_treatment}
 
 Provide treatment advice in 6 sections:
 
-1. AMHARIC: Translate the treatment advice to proper Amharic (not just transliteration). Use natural Ethiopian farming language that Amharic-speaking farmers understand.
-
+1. AMHARIC: Translate the treatment advice to proper Amharic. Use natural Ethiopian farming language.
 2. ENGLISH: Provide clear treatment advice in simple English that farmers can understand.
+3. OROMOO: Translate the treatment advice to proper Afaan Oromoo.
+4. TRADITIONAL: Provide traditional Ethiopian remedies using local materials (neem/ኒም, wood ash/አመድ, garlic/ነጭ ሽንኩርት, chili pepper/በርበሬ).
+5. ORGANIC: Suggest organic and compost-based solutions from local materials.
+6. PREVENTION: Preventive measures for Ethiopian highland/lowland farming, considering rainy seasons (ክረምት/በልግ).
 
-3. OROMOO: Translate the treatment advice to proper Afaan Oromoo. Use natural farming language that Oromo-speaking farmers understand.
+Format EXACTLY like this:
+AMHARIC: [text]
+ENGLISH: [text]
+OROMOO: [text]
+TRADITIONAL: [text]
+ORGANIC: [text]
+PREVENTION: [text]
 
-4. TRADITIONAL: Provide traditional Ethiopian remedies using local materials available to smallholder farmers (neem/ኒም/eeboo, wood ash/አመድ/daaraa, garlic/ነጭ ሽንኩርት/qullubbii adii, chili pepper/በርበሬ/barbaree, compost tea, etc.)
-
-5. ORGANIC: Suggest organic and compost-based solutions that don't require expensive chemicals. Include how to make organic fungicides/pesticides from local materials.
-
-6. PREVENTION: Preventive measures specific to Ethiopian highland/lowland farming conditions, considering rainy seasons (ክረምት/በልግ/ganna/birraa).
-
-Format your response EXACTLY like this:
-AMHARIC: [Amharic text here]
-ENGLISH: [English text here]
-OROMOO: [Afaan Oromoo text here]
-TRADITIONAL: [Traditional remedies here]
-ORGANIC: [Organic solutions here]
-PREVENTION: [Prevention tips here]
-
-Keep each section concise (2-3 sentences max).
-"""
+Keep each section concise (2-3 sentences max)."""
 
     try:
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt,
+        )
         text = response.text.strip()
-        
-        # Parse the response
+
         sections = {
-            "amharic": "",
-            "english": "",
-            "oromoo": "",
-            "traditional": "",
-            "organic": "",
-            "prevention": ""
+            "amharic": "", "english": "", "oromoo": "",
+            "traditional": "", "organic": "", "prevention": ""
         }
-        
+
         current_section = None
         for line in text.split('\n'):
             line = line.strip()
@@ -121,9 +121,9 @@ Keep each section concise (2-3 sentences max).
                 sections['prevention'] = line.replace('PREVENTION:', '').strip()
             elif current_section and line:
                 sections[current_section] += ' ' + line
-        
+
         return sections
-    
+
     except Exception as e:
         print(f"Gemini API error: {e}")
         return {
@@ -138,12 +138,13 @@ Keep each section concise (2-3 sentences max).
 
 def translate_to_amharic(text: str) -> str:
     """Simple translation helper for any text."""
-    if not model:
+    if not client:
         return text
-    
     try:
-        prompt = f"Translate this agricultural advice to natural Amharic that Ethiopian farmers understand: {text}"
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=f"Translate this agricultural advice to natural Amharic that Ethiopian farmers understand: {text}",
+        )
         return response.text.strip()
     except:
         return text

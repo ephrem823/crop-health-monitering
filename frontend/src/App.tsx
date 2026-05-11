@@ -104,7 +104,7 @@ const App: React.FC = () => {
                 <span className="text-xl font-bold">EthioCrop Health</span>
               </div>
               <p className="text-emerald-100/70 text-sm leading-relaxed">
-                Empowering smallholder farmers in Ethiopia with advanced AI technology for crop disease detection and management.
+                Empowering smallholder farmers in east Ethiopia with advanced AI technology for crop disease detection and management.
               </p>
             </div>
             <div>

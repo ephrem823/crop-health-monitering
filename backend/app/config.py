@@ -2,84 +2,124 @@ import os
 from pathlib import Path
 
 # Get the directory where this config.py file is located
-BASE_DIR = Path(__file__).resolve().parent.parent  # backend_new/
+BASE_DIR = Path(__file__).resolve().parent.parent  # backend/
 
-IMG_SIZE = (224, 224)          # Input size expected by EfficientNet-B0
-MODEL_PATH = str(BASE_DIR / "models" / "crop_health_model.h5")
+IMG_SIZE = (240, 240)          # Input size expected by PlantDiseaseProV1
+MODEL_PATH = str(BASE_DIR / "models" / "crop_health_model_fixed.h5")
 
 # Every class the model can predict (order must match training labels)
 CLASS_NAMES = [
-    "Maize_Common_Rust",
-    "Maize_Gray_Leaf_Spot",
-    "Maize_Healthy",
-    "Maize_Northern_Leaf_Blight",
+    "Apple___Apple_scab",
+    "Apple___Black_rot",
+    "Apple___Cedar_apple_rust",
+    "Apple___healthy",
+    "Blueberry___healthy",
+    "Cherry_(including_sour)___Powdery_mildew",
+    "Cherry_(including_sour)___healthy",
+    "Coffee___Cerscospora",
+    "Coffee___Healthy",
+    "Coffee___Leaf rust",
+    "Coffee___Phoma",
+    "Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot",
+    "Corn_(maize)___Common_rust_",
+    "Corn_(maize)___Northern_Leaf_Blight",
+    "Corn_(maize)___healthy",
+    "Enset___Bacterial-Wilt",
+    "Enset___Healthy",
+    "Grape___Black_rot",
+    "Grape___Esca_(Black_Measles)",
+    "Grape___Leaf_blight_(Isariopsis_Leaf_Spot)",
+    "Grape___healthy",
+    "Maize___Blight",
+    "Maize___Common_Rust",
+    "Maize___Gray_Leaf_Spot",
+    "Maize___Healthy",
+    "NOT_A_PLANT",
+    "Orange___Haunglongbing_(Citrus_greening)",
+    "Peach___Bacterial_spot",
+    "Peach___healthy",
+    "Pepper,_bell___Bacterial_spot",
+    "Pepper,_bell___healthy",
     "Potato___Early_blight",
     "Potato___Late_blight",
     "Potato___healthy",
+    "Raspberry___healthy",
+    "Soybean___healthy",
+    "Squash___Powdery_mildew",
+    "Strawberry___Leaf_scorch",
+    "Strawberry___healthy",
     "Tomato___Bacterial_spot",
     "Tomato___Early_blight",
     "Tomato___Late_blight",
     "Tomato___Leaf_Mold",
     "Tomato___Septoria_leaf_spot",
-    "Tomato___Spider_mites_Two_spotted_spider_mite",
+    "Tomato___Spider_mites Two-spotted_spider_mite",
     "Tomato___Target_Spot",
     "Tomato___Tomato_Yellow_Leaf_Curl_Virus",
     "Tomato___Tomato_mosaic_virus",
     "Tomato___healthy",
+    "test",
 ]
 
 # Treatment advice keyed by class name (Ethiopian cultural context)
 TREATMENT_ADVICE: dict[str, str] = {
-    "Maize_Common_Rust": (
-        "የበሰበሰ በሽታ (Common Rust): በአዞክሲስትሮቢን ወይም ፕሮፒኮናዞል መድሃኒት ይረጩ። "
-        "የተከላካይ ዝርያዎችን ይዝሩ እና ለአየር ዝውውር በቂ ቦታ ይተው። "
-        "Traditional: Mix neem leaves (ኒም) with water and spray on affected plants."
-    ),
-    "Maize_Gray_Leaf_Spot": (
-        "ግራጫ ቅጠል ነጠብጣብ: ፈንገስ ገዳይ መድሃኒት (ስትሮቢሉሪን) ይጠቀሙ። የሰብል ማዞሪያ ያድርጉ። "
-        "የተበከሉ ቅጠሎችን ያስወግዱ እና ያቃጥሉ። "
-        "Ethiopian practice: Rotate with teff or pulses to break disease cycle."
-    ),
-    "Maize_Northern_Leaf_Blight": (
-        "የሰሜን ቅጠል ማቃጠያ: ምልክቶች ሲታዩ ፈንገስ ገዳይ መድሃኒት ይረጩ። የተከላካይ ዝርያዎችን ይጠቀሙ। "
-        "ከመሰብሰብ በኋላ የተበከሉ እፅዋትን ያስወግዱ። "
-        "Local wisdom: Plant marigold (ጽጌረዳ) around fields as natural pest deterrent."
-    ),
-    "Potato_Early_Blight": (
-        "የድንች ቀደምት ማቃጠያ: ማንኮዜብ ወይም የመዳብ ኦክሲክሎራይድ በየ7-10 ቀናት ይረጩ። "
-        "ከላይ ውሃ መስጠትን ያስወግዱ። የታችኛውን የተበከለ ቅጠል ያስወግዱ። "
-        "Ethiopian tip: Use wood ash (አመድ) mixed with water as organic fungicide."
-    ),
-    "Potato_Late_Blight": (
-        "የድንች ዘግይቶ ማቃጠያ: ክሎሮታሎኒል ወይም የመዳብ መድሃኒት ወዲያውኑ ይረጩ። "
-        "ትክክለኛ የሰብል ማዞሪያ ያድርጉ። ሁሉንም የተበከሉ እፅዋትን ያስወግዱ። "
-        "Critical: This disease spreads fast in Ethiopian highlands during rainy season (ክረምት)."
-    ),
-    "Tomato_Bacterial_Spot": (
-        "የቲማቲም ባክቴሪያ ነጠብጣብ: ከበሽታ የፀዳ የተረጋገጠ ዘር ይጠቀሙ። ከላይ ውሃ መስጠትን ያስወግዱ። "
-        "የመዳብ ባክቴሪያ ገዳይ ይረጩ። የተበከሉ እፅዋትን ያስወግዱ። "
-        "Ethiopian practice: Space plants well for air flow, especially in Rift Valley areas."
-    ),
-    "Tomato_Late_Blight": (
-        "የቲማቲም ዘግይቶ ማቃጠያ: ሜታላክሲል ወይም ክሎሮታሎኒል ይረጩ። "
-        "በማስገር እና በመደገፍ የአየር ዝውውርን ያሻሽሉ። የተበከሉ ቲሹዎችን ያስወግዱ። "
-        "Local advice: Common in Bale, Arsi during belg rains - spray preventively."
-    ),
-    "Tomato_Septoria_Leaf_Spot": (
-        "ሴፕቶሪያ ቅጠል ነጠብጣብ: የተበከሉ ቅጠሎችን ያስወግዱ እና ያጥፉ። ማንኮዜብ ወይም መዳብ ይረጩ። "
-        "ውሃ ሲሰጡ ቅጠሎችን እርጥብ ማድረግን ያስወግዱ። በየዓመቱ ሰብሎችን ያዙሩ። "
-        "Ethiopian method: Mulch with dry grass to prevent soil splash during rain."
-    ),
-    "Tomato_Early_Blight": (
-        "የቲማቲም ቀደምት ማቃጠያ: የተበከሉ የታችኛ ቅጠሎችን ያስወግዱ። ክሎሮታሎኒል ወይም ማንኮዜብ ይረጩ። "
-        "ጥሩ የአየር ዝውውር ያረጋግጡ። ከላይ ውሃ መስጠትን ያስወግዱ። "
-        "Traditional: Plant basil (ቤሶብላ) nearby - natural companion plant."
-    ),
-    "Tomato_Leaf_Mold": (
-        "የቲማቲም ቅጠል ሻጋታ: የግሪንሃውስ አየር ማናፈሻ ያሻሽሉ። መዳብ ወይም ማንኮዜብ ይረጩ። "
-        "ከፍተኛ እርጥበትን ያስወግዱ። የተበከሉ ቅጠሎችን ወዲያውኑ ያስወግዱ። "
-        "Ethiopian context: Common in plastic tunnels - ensure good ventilation during hot season."
-    ),
+    # Coffee
+    "Coffee___Cerscospora": "Apply copper-based fungicides. Remove infected leaves. Improve air circulation.",
+    "Coffee___Leaf rust": "የቡና ቅጠል ዝገት: Apply copper fungicides. Prune for airflow. Critical for Ethiopian coffee.",
+    "Coffee___Phoma": "Remove infected branches. Apply fungicide. Ensure proper drainage.",
+    # Enset
+    "Enset___Bacterial-Wilt": "የእንሰት ባክቴሪያ በሽታ: Remove infected plants immediately. Disinfect tools. Plant disease-free suckers.",
+    # Corn/Maize
+    "Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot": "Apply fungicide. Practice crop rotation. Remove debris.",
+    "Corn_(maize)___Common_rust_": "Use resistant varieties. Apply fungicide if severe. Ensure spacing.",
+    "Corn_(maize)___Northern_Leaf_Blight": "Apply fungicide early. Use resistant hybrids. Remove residue.",
+    "Maize___Blight": "የበቆሎ ማቃጠያ: Apply fungicide. Remove infected plants. Rotate with legumes.",
+    "Maize___Common_Rust": "የበሰበሰ በሽታ: Apply azoxystrobin. Use resistant varieties. Traditional: neem spray.",
+    "Maize___Gray_Leaf_Spot": "ግራጫ ቅጠል ነጠብጣብ: Use fungicide. Rotate with teff or pulses. Remove infected leaves.",
+    # Potato
+    "Potato___Early_blight": "የድንች ቀደምት ማቃጠያ: Spray mancozeb every 7-10 days. Avoid overhead watering. Use wood ash.",
+    "Potato___Late_blight": "የድንች ዘግይቶ ማቃጠያ: Apply chlorothalonil immediately. Rotate crops. Spreads fast in highlands.",
+    # Tomato
+    "Tomato___Bacterial_spot": "የቲማቲም ባክቴሪያ ነጠብጣብ: Use certified seeds. Avoid overhead watering. Apply copper.",
+    "Tomato___Early_blight": "የቲማቲም ቀደምት ማቃጠያ: Remove infected leaves. Spray chlorothalonil. Plant basil nearby.",
+    "Tomato___Late_blight": "የቲማቲም ዘግይቶ ማቃጠያ: Spray metalaxyl. Improve airflow. Common in Bale, Arsi.",
+    "Tomato___Leaf_Mold": "የቲማቲም ቅጠል ሻጋታ: Improve ventilation. Spray copper. Reduce humidity.",
+    "Tomato___Septoria_leaf_spot": "ሴፕቶሪያ ቅጠል ነጠብጣብ: Remove infected leaves. Spray mancozeb. Mulch with dry grass.",
+    "Tomato___Spider_mites Two-spotted_spider_mite": "Spray neem oil. Increase humidity. Remove infested leaves.",
+    "Tomato___Target_Spot": "Apply chlorothalonil fungicide. Remove infected leaves. Ensure air circulation.",
+    "Tomato___Tomato_Yellow_Leaf_Curl_Virus": "Control whitefly vectors. Remove infected plants. Use resistant varieties.",
+    "Tomato___Tomato_mosaic_virus": "Remove infected plants. Disinfect tools. Use virus-free seeds. Control aphids.",
+    # Other crops
+    "Apple___Apple_scab": "Apply fungicide during wet periods. Remove fallen leaves. Prune for air circulation.",
+    "Apple___Black_rot": "Remove infected fruit and branches. Apply fungicide. Prune dead wood.",
+    "Apple___Cedar_apple_rust": "Apply fungicide in spring. Remove nearby cedar trees. Use resistant varieties.",
+    "Cherry_(including_sour)___Powdery_mildew": "Apply sulfur or fungicide. Prune for airflow. Avoid overhead watering.",
+    "Grape___Black_rot": "Apply fungicide before rain. Remove mummified fruit. Prune for air circulation.",
+    "Grape___Esca_(Black_Measles)": "Prune infected wood. No chemical cure. Improve vine health with nutrition.",
+    "Grape___Leaf_blight_(Isariopsis_Leaf_Spot)": "Apply copper fungicide. Remove infected leaves. Ensure drainage.",
+    "Orange___Haunglongbing_(Citrus_greening)": "No cure. Remove infected trees. Control psyllid vectors. Use certified stock.",
+    "Peach___Bacterial_spot": "Apply copper spray. Use resistant varieties. Avoid overhead irrigation.",
+    "Pepper,_bell___Bacterial_spot": "Use disease-free seeds. Apply copper bactericide. Avoid working with wet plants.",
+    "Squash___Powdery_mildew": "Apply sulfur or fungicide. Improve air circulation. Remove infected leaves.",
+    "Strawberry___Leaf_scorch": "Remove infected leaves. Apply fungicide. Ensure proper spacing and drainage.",
+    "NOT_A_PLANT": "⚠️ This image does not appear to be a plant leaf. Please upload a clear crop leaf photo.",
+    "test": "This is a test class. Please upload a real crop leaf image.",
+    # Healthy classes
+    "Apple___healthy": HEALTHY_ADVICE if False else "Your Apple plant looks healthy! Maintain regular watering, balanced fertilization, and monitor for early signs of disease.",
+    "Blueberry___healthy": "Your Blueberry plant looks healthy! Maintain acidic soil pH (4.5-5.5) and consistent moisture.",
+    "Cherry_(including_sour)___healthy": "Your Cherry plant looks healthy! Prune annually and monitor for pests.",
+    "Coffee___Healthy": "Your Coffee plant looks healthy! ቡናዎ ጤናማ ነው። Maintain shade, proper drainage, and regular pruning.",
+    "Corn_(maize)___healthy": "Your Maize looks healthy! Continue proper spacing and balanced fertilization.",
+    "Enset___Healthy": "የእንሰት ተክልዎ ጤናማ ነው። Your Enset is healthy! Continue traditional care practices.",
+    "Grape___healthy": "Your Grape vine looks healthy! Maintain proper pruning and airflow.",
+    "Maize___Healthy": "የበቆሎዎ ጤናማ ነው። Your Maize is healthy! Continue crop rotation and balanced fertilization.",
+    "Peach___healthy": "Your Peach tree looks healthy! Monitor for pests and maintain proper irrigation.",
+    "Pepper,_bell___healthy": "Your Bell Pepper looks healthy! Maintain consistent watering and avoid waterlogging.",
+    "Potato___healthy": "የድንችዎ ጤናማ ነው። Your Potato is healthy! Continue hilling and monitor for late blight during rainy season.",
+    "Raspberry___healthy": "Your Raspberry looks healthy! Prune old canes and maintain good airflow.",
+    "Soybean___healthy": "Your Soybean looks healthy! Continue crop rotation with cereals.",
+    "Strawberry___healthy": "Your Strawberry looks healthy! Maintain mulching and remove runners regularly.",
+    "Tomato___healthy": "የቲማቲምዎ ጤናማ ነው። Your Tomato is healthy! Continue staking, regular watering, and monitor for pests.",
 }
 
 # Default message for healthy plants

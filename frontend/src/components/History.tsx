@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { PDFDownloadLink, Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import { FileDown } from 'lucide-react';
 import { getHistory, searchHistory, clearHistory } from '../services/api';
+import { Button } from './ui/button';
 
 interface HistoryItem {
   id: number;
@@ -7,10 +10,179 @@ interface HistoryItem {
   disease_name: string;
   confidence: number;
   timestamp: string;
-  location?: string;
-  farmer_notes?: string;
 }
 
+// PDF Styles
+const pdfStyles = StyleSheet.create({
+  page: {
+    padding: 40,
+    fontSize: 10,
+    fontFamily: 'Helvetica',
+  },
+  header: {
+    marginBottom: 20,
+    borderBottom: '2pt solid #059669',
+    paddingBottom: 10,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#059669',
+    marginBottom: 5,
+  },
+  subtitle: {
+    fontSize: 9,
+    color: '#64748b',
+  },
+  section: {
+    marginTop: 15,
+    marginBottom: 15,
+    padding: 12,
+    backgroundColor: '#f8fafc',
+    borderRadius: 4,
+    borderLeft: '3pt solid #059669',
+  },
+  diseaseTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#0f172a',
+    marginBottom: 8,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    marginBottom: 5,
+  },
+  label: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#475569',
+    width: 100,
+  },
+  value: {
+    fontSize: 10,
+    color: '#1e293b',
+    flex: 1,
+  },
+  adviceSection: {
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: '#ffffff',
+    borderRadius: 4,
+  },
+  adviceTitle: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#059669',
+    marginBottom: 6,
+  },
+  adviceText: {
+    fontSize: 9,
+    color: '#334155',
+    lineHeight: 1.5,
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 30,
+    left: 40,
+    right: 40,
+    textAlign: 'center',
+    fontSize: 8,
+    color: '#94a3b8',
+    borderTop: '1pt solid #e2e8f0',
+    paddingTop: 10,
+  },
+});
+
+// Treatment advice mapping
+const TREATMENT_ADVICE: { [key: string]: string } = {
+  "Coffee___Leaf rust": "Apply copper fungicides. Prune for airflow. Critical for Ethiopian coffee.",
+  "Enset___Bacterial-Wilt": "Remove infected plants immediately. Disinfect tools. Plant disease-free suckers.",
+  "Maize___Blight": "Apply fungicide. Remove infected plants. Rotate with legumes.",
+  "Maize___Common_Rust": "Apply azoxystrobin. Use resistant varieties. Traditional: neem spray.",
+  "Maize___Gray_Leaf_Spot": "Use fungicide. Rotate with teff or pulses. Remove infected leaves.",
+  "Potato___Early_blight": "Spray mancozeb every 7-10 days. Avoid overhead watering. Use wood ash.",
+  "Potato___Late_blight": "Apply chlorothalonil immediately. Rotate crops. Spreads fast in highlands.",
+  "Tomato___Bacterial_spot": "Use certified seeds. Avoid overhead watering. Apply copper.",
+  "Tomato___Early_blight": "Remove infected leaves. Spray chlorothalonil. Plant basil nearby.",
+  "Tomato___Late_blight": "Spray metalaxyl. Improve airflow. Common in Bale, Arsi.",
+  "Tomato___Leaf_Mold": "Improve ventilation. Spray copper. Reduce humidity.",
+  "Tomato___Septoria_leaf_spot": "Remove infected leaves. Spray mancozeb. Mulch with dry grass.",
+};
+
+// PDF Document Component
+interface DiagnosisPDFProps {
+  history: HistoryItem[];
+}
+
+const DiagnosisPDF: React.FC<DiagnosisPDFProps> = ({ history }) => {
+  // Filter only diseased crops (not healthy)
+  const diseasedCrops = history.filter(item => 
+    !item.disease_name.toLowerCase().includes('healthy')
+  );
+
+  return (
+    <Document>
+      <Page size="A4" style={pdfStyles.page}>
+        {/* Header */}
+        <View style={pdfStyles.header}>
+          <Text style={pdfStyles.title}>Crop Disease Diagnosis Report</Text>
+          <Text style={pdfStyles.subtitle}>
+            Generated on {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}
+          </Text>
+          <Text style={pdfStyles.subtitle}>
+            Total Diseases Detected: {diseasedCrops.length}
+          </Text>
+        </View>
+
+        {/* Disease Entries */}
+        {diseasedCrops.map((item, index) => {
+          const fullKey = `${item.crop_name}___${item.disease_name}`;
+          const advice = TREATMENT_ADVICE[fullKey] || "Consult a local agricultural expert for treatment advice.";
+          
+          return (
+            <View key={item.id} style={pdfStyles.section}>
+              <Text style={pdfStyles.diseaseTitle}>
+                {index + 1}. {item.crop_name} - {item.disease_name.replace(/_/g, ' ')}
+              </Text>
+              
+              <View style={pdfStyles.infoRow}>
+                <Text style={pdfStyles.label}>Confidence:</Text>
+                <Text style={pdfStyles.value}>{(item.confidence * 100).toFixed(1)}%</Text>
+              </View>
+              
+              <View style={pdfStyles.infoRow}>
+                <Text style={pdfStyles.label}>Detected:</Text>
+                <Text style={pdfStyles.value}>
+                  {new Date(item.timestamp).toLocaleString()}
+                </Text>
+              </View>
+
+              <View style={pdfStyles.adviceSection}>
+                <Text style={pdfStyles.adviceTitle}>Treatment Advice:</Text>
+                <Text style={pdfStyles.adviceText}>{advice}</Text>
+              </View>
+            </View>
+          );
+        })}
+
+        {diseasedCrops.length === 0 && (
+          <View style={pdfStyles.section}>
+            <Text style={pdfStyles.adviceText}>
+              No diseases detected in the diagnosis history. All crops appear healthy.
+            </Text>
+          </View>
+        )}
+
+        {/* Footer */}
+        <Text style={pdfStyles.footer}>
+          EthioCrop Health Monitoring System - Empowering Ethiopian Farmers
+        </Text>
+      </Page>
+    </Document>
+  );
+};
+
+// Main Component
 export default function History() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -80,7 +252,24 @@ export default function History() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">Diagnosis History</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold text-gray-800">Diagnosis History</h1>
+        
+        {/* Print to PDF Button */}
+        {history.length > 0 && (
+          <PDFDownloadLink
+            document={<DiagnosisPDF history={history} />}
+            fileName={`diagnosis-report-${new Date().toISOString().split('T')[0]}.pdf`}
+          >
+            {({ loading }) => (
+              <Button disabled={loading} className="flex items-center gap-2">
+                <FileDown className="h-4 w-4" />
+                {loading ? 'Generating PDF...' : 'Export to PDF'}
+              </Button>
+            )}
+          </PDFDownloadLink>
+        )}
+      </div>
       
       {/* Search Bar */}
       <form onSubmit={handleSearch} className="mb-6">
