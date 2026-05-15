@@ -7,7 +7,14 @@ export interface PredictResponse {
   class: string;       // e.g. "Potato_Late_Blight"
   confidence: number;  // 0.0 – 1.0
   treatment: string;
-  heatmap: string;     // base64 data URI
+  heatmap?: string;    // base64 data URI
+  enhanced_treatment?: {
+    amharic: string;
+    traditional: string;
+    organic: string;
+    prevention: string;
+  };
+  low_confidence?: boolean;
 }
 
 export async function predictDisease(file: File): Promise<PredictResponse> {

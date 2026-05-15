@@ -39,7 +39,7 @@ const App: React.FC = () => {
       
       // Warn if confidence is low (might be unsupported crop)
       if (response.confidence < 0.5) {
-        toast.warning('Low confidence detected. Please ensure you uploaded a Maize, Potato, or Tomato leaf image.');
+        toast.warning('Low confidence detected. Please upload a clear leaf image of a supported crop.');
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Analysis failed';
@@ -52,6 +52,16 @@ const App: React.FC = () => {
   const handleReset = () => {
     setDiagnosisResult(null);
     setIsAnalyzing(false);
+  };
+
+  const handleNavigate = (page: string) => {
+    if (page === 'diagnosis') {
+      handleReset();
+    }
+    setCurrentPage(page);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const renderContent = () => {
@@ -85,10 +95,7 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-white font-sans text-slate-900">
       <Header
         currentPage={currentPage}
-        onNavigate={(page) => {
-          setCurrentPage(page);
-          if (page === 'diagnosis') handleReset();
-        }}
+        onNavigate={handleNavigate}
       />
 
       <main>{renderContent()}</main>
@@ -104,25 +111,27 @@ const App: React.FC = () => {
                 <span className="text-xl font-bold">EthioCrop Health</span>
               </div>
               <p className="text-emerald-100/70 text-sm leading-relaxed">
-                Empowering smallholder farmers in east Ethiopia with advanced AI technology for crop disease detection and management.
+                Empowering smallholder farmers in East Ethiopia with advanced AI technology for crop disease detection and treatment.
               </p>
             </div>
             <div>
-              <h4 className="font-bold mb-6">Quick Links</h4>
+                <h4 className="font-bold mb-6">Quick Links</h4>
               <ul className="space-y-4 text-emerald-100/70 text-sm">
-                <li><button onClick={() => setCurrentPage('home')}>Home</button></li>
-                <li><button onClick={() => setCurrentPage('diagnosis')}>Diagnosis</button></li>
-                <li><button onClick={() => setCurrentPage('history')}>History</button></li>
-                <li><button onClick={() => setCurrentPage('about')}>About Us</button></li>
+                <li><button type="button" onClick={() => handleNavigate('home')}>Home</button></li>
+                <li><button type="button" onClick={() => handleNavigate('diagnosis')}>Diagnosis</button></li>
+                <li><button type="button" onClick={() => handleNavigate('history')}>History</button></li>
+                <li><button type="button" onClick={() => handleNavigate('about')}>About Us</button></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-bold mb-6">Target Crops</h4>
-              <ul className="space-y-4 text-emerald-100/70 text-sm">
-                <li>Maize (Corn)</li>
-                <li>Potato</li>
-                <li>Tomato</li>
-                <li>Ethiopian Highland Crops</li>
+              <h4 className="font-bold mb-6">Supported Crops</h4>
+              <ul className="space-y-2 text-emerald-100/70 text-sm">
+                <li>Apple, Blueberry, Cherry</li>
+                <li>Coffee, Corn, Enset</li>
+                <li>Grape, Maize, Orange</li>
+                <li>Peach, Pepper, Potato</li>
+                <li>Raspberry, Soybean, Squash</li>
+                <li>Strawberry, Tomato</li>
               </ul>
             </div>
           </div>

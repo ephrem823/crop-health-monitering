@@ -12,88 +12,22 @@ interface HistoryItem {
   timestamp: string;
 }
 
-// PDF Styles
 const pdfStyles = StyleSheet.create({
-  page: {
-    padding: 40,
-    fontSize: 10,
-    fontFamily: 'Helvetica',
-  },
-  header: {
-    marginBottom: 20,
-    borderBottom: '2pt solid #059669',
-    paddingBottom: 10,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#059669',
-    marginBottom: 5,
-  },
-  subtitle: {
-    fontSize: 9,
-    color: '#64748b',
-  },
-  section: {
-    marginTop: 15,
-    marginBottom: 15,
-    padding: 12,
-    backgroundColor: '#f8fafc',
-    borderRadius: 4,
-    borderLeft: '3pt solid #059669',
-  },
-  diseaseTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#0f172a',
-    marginBottom: 8,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    marginBottom: 5,
-  },
-  label: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: '#475569',
-    width: 100,
-  },
-  value: {
-    fontSize: 10,
-    color: '#1e293b',
-    flex: 1,
-  },
-  adviceSection: {
-    marginTop: 10,
-    padding: 10,
-    backgroundColor: '#ffffff',
-    borderRadius: 4,
-  },
-  adviceTitle: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    color: '#059669',
-    marginBottom: 6,
-  },
-  adviceText: {
-    fontSize: 9,
-    color: '#334155',
-    lineHeight: 1.5,
-  },
-  footer: {
-    position: 'absolute',
-    bottom: 30,
-    left: 40,
-    right: 40,
-    textAlign: 'center',
-    fontSize: 8,
-    color: '#94a3b8',
-    borderTop: '1pt solid #e2e8f0',
-    paddingTop: 10,
-  },
+  page: { padding: 40, fontSize: 10, fontFamily: 'Helvetica' },
+  header: { marginBottom: 20, borderBottom: '2pt solid #059669', paddingBottom: 10 },
+  title: { fontSize: 22, fontWeight: 'bold', color: '#059669', marginBottom: 5 },
+  subtitle: { fontSize: 9, color: '#64748b' },
+  section: { marginTop: 15, marginBottom: 15, padding: 12, backgroundColor: '#f8fafc', borderRadius: 4, borderLeft: '3pt solid #059669' },
+  diseaseTitle: { fontSize: 14, fontWeight: 'bold', color: '#0f172a', marginBottom: 8 },
+  infoRow: { flexDirection: 'row', marginBottom: 5 },
+  label: { fontSize: 10, fontWeight: 'bold', color: '#475569', width: 100 },
+  value: { fontSize: 10, color: '#1e293b', flex: 1 },
+  adviceSection: { marginTop: 10, padding: 10, backgroundColor: '#ffffff', borderRadius: 4 },
+  adviceTitle: { fontSize: 11, fontWeight: 'bold', color: '#059669', marginBottom: 6 },
+  adviceText: { fontSize: 9, color: '#334155', lineHeight: 1.5 },
+  footer: { position: 'absolute', bottom: 30, left: 40, right: 40, textAlign: 'center', fontSize: 8, color: '#94a3b8', borderTop: '1pt solid #e2e8f0', paddingTop: 10 },
 });
 
-// Treatment advice mapping
 const TREATMENT_ADVICE: { [key: string]: string } = {
   "Coffee___Leaf rust": "Apply copper fungicides. Prune for airflow. Critical for Ethiopian coffee.",
   "Enset___Bacterial-Wilt": "Remove infected plants immediately. Disinfect tools. Plant disease-free suckers.",
@@ -109,94 +43,62 @@ const TREATMENT_ADVICE: { [key: string]: string } = {
   "Tomato___Septoria_leaf_spot": "Remove infected leaves. Spray mancozeb. Mulch with dry grass.",
 };
 
-// PDF Document Component
-interface DiagnosisPDFProps {
-  history: HistoryItem[];
-}
+const DiagnosisPDF: React.FC<{ selected: HistoryItem[] }> = ({ selected }) => (
+  <Document>
+    <Page size="A4" style={pdfStyles.page}>
+      <View style={pdfStyles.header}>
+        <Text style={pdfStyles.title}>Crop Disease Diagnosis Report</Text>
+        <Text style={pdfStyles.subtitle}>Generated on {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}</Text>
+        <Text style={pdfStyles.subtitle}>Total Selected: {selected.length}</Text>
+      </View>
 
-const DiagnosisPDF: React.FC<DiagnosisPDFProps> = ({ history }) => {
-  // Filter only diseased crops (not healthy)
-  const diseasedCrops = history.filter(item => 
-    !item.disease_name.toLowerCase().includes('healthy')
-  );
-
-  return (
-    <Document>
-      <Page size="A4" style={pdfStyles.page}>
-        {/* Header */}
-        <View style={pdfStyles.header}>
-          <Text style={pdfStyles.title}>Crop Disease Diagnosis Report</Text>
-          <Text style={pdfStyles.subtitle}>
-            Generated on {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}
-          </Text>
-          <Text style={pdfStyles.subtitle}>
-            Total Diseases Detected: {diseasedCrops.length}
-          </Text>
-        </View>
-
-        {/* Disease Entries */}
-        {diseasedCrops.map((item, index) => {
-          const fullKey = `${item.crop_name}___${item.disease_name}`;
-          const advice = TREATMENT_ADVICE[fullKey] || "Consult a local agricultural expert for treatment advice.";
-          
-          return (
-            <View key={item.id} style={pdfStyles.section}>
-              <Text style={pdfStyles.diseaseTitle}>
-                {index + 1}. {item.crop_name} - {item.disease_name.replace(/_/g, ' ')}
-              </Text>
-              
-              <View style={pdfStyles.infoRow}>
-                <Text style={pdfStyles.label}>Confidence:</Text>
-                <Text style={pdfStyles.value}>{(item.confidence * 100).toFixed(1)}%</Text>
-              </View>
-              
-              <View style={pdfStyles.infoRow}>
-                <Text style={pdfStyles.label}>Detected:</Text>
-                <Text style={pdfStyles.value}>
-                  {new Date(item.timestamp).toLocaleString()}
-                </Text>
-              </View>
-
-              <View style={pdfStyles.adviceSection}>
-                <Text style={pdfStyles.adviceTitle}>Treatment Advice:</Text>
-                <Text style={pdfStyles.adviceText}>{advice}</Text>
-              </View>
+      {selected.map((item, index) => {
+        const fullKey = `${item.crop_name}___${item.disease_name}`;
+        const advice = TREATMENT_ADVICE[fullKey] || "Consult a local agricultural expert for treatment advice.";
+        return (
+          <View key={item.id} style={pdfStyles.section}>
+            <Text style={pdfStyles.diseaseTitle}>{index + 1}. {item.crop_name} - {item.disease_name.replace(/_/g, ' ')}</Text>
+            <View style={pdfStyles.infoRow}>
+              <Text style={pdfStyles.label}>Confidence:</Text>
+              <Text style={pdfStyles.value}>{(item.confidence * 100).toFixed(1)}%</Text>
             </View>
-          );
-        })}
-
-        {diseasedCrops.length === 0 && (
-          <View style={pdfStyles.section}>
-            <Text style={pdfStyles.adviceText}>
-              No diseases detected in the diagnosis history. All crops appear healthy.
-            </Text>
+            <View style={pdfStyles.infoRow}>
+              <Text style={pdfStyles.label}>Detected:</Text>
+              <Text style={pdfStyles.value}>{new Date(item.timestamp).toLocaleString()}</Text>
+            </View>
+            <View style={pdfStyles.adviceSection}>
+              <Text style={pdfStyles.adviceTitle}>Treatment Advice:</Text>
+              <Text style={pdfStyles.adviceText}>{advice}</Text>
+            </View>
           </View>
-        )}
+        );
+      })}
 
-        {/* Footer */}
-        <Text style={pdfStyles.footer}>
-          EthioCrop Health Monitoring System - Empowering Ethiopian Farmers
-        </Text>
-      </Page>
-    </Document>
-  );
-};
+      {selected.length === 0 && (
+        <View style={pdfStyles.section}>
+          <Text style={pdfStyles.adviceText}>No items selected for export.</Text>
+        </View>
+      )}
 
-// Main Component
+      <Text style={pdfStyles.footer}>EthioCrop Health Monitoring System - Empowering Ethiopian Farmers</Text>
+    </Page>
+  </Document>
+);
+
 export default function History() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
-  useEffect(() => {
-    loadHistory();
-  }, []);
+  useEffect(() => { loadHistory(); }, []);
 
   const loadHistory = async () => {
     setLoading(true);
     try {
       const data = await getHistory();
       setHistory(data.history);
+      setSelectedIds(new Set());
     } catch (error) {
       console.error('Failed to load history:', error);
     } finally {
@@ -206,15 +108,12 @@ export default function History() {
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!searchQuery.trim()) {
-      loadHistory();
-      return;
-    }
-    
+    if (!searchQuery.trim()) { loadHistory(); return; }
     setLoading(true);
     try {
       const data = await searchHistory(searchQuery);
       setHistory(data.results);
+      setSelectedIds(new Set());
     } catch (error) {
       console.error('Search failed:', error);
     } finally {
@@ -223,54 +122,61 @@ export default function History() {
   };
 
   const handleClearAll = async () => {
-    if (!confirm('Are you sure you want to delete all diagnosis history? This cannot be undone.')) {
-      return;
-    }
-    
+    if (!confirm('Are you sure you want to delete all diagnosis history? This cannot be undone.')) return;
     setLoading(true);
     try {
       await clearHistory();
       setHistory([]);
       setSearchQuery('');
+      setSelectedIds(new Set());
     } catch (error) {
-      console.error('Failed to clear history:', error);
       alert('Failed to clear history');
     } finally {
       setLoading(false);
     }
   };
 
-  const formatDate = (timestamp: string) => {
-    return new Date(timestamp).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+  const toggleSelect = (id: number) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
     });
   };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === history.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(history.map(h => h.id)));
+    }
+  };
+
+  const selectedItems = history.filter(h => selectedIds.has(h.id));
+
+  const formatDate = (timestamp: string) =>
+    new Date(timestamp).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-gray-800">Diagnosis History</h1>
-        
-        {/* Print to PDF Button */}
-        {history.length > 0 && (
+
+        {selectedIds.size > 0 && (
           <PDFDownloadLink
-            document={<DiagnosisPDF history={history} />}
+            document={<DiagnosisPDF selected={selectedItems} />}
             fileName={`diagnosis-report-${new Date().toISOString().split('T')[0]}.pdf`}
           >
             {({ loading }) => (
               <Button disabled={loading} className="flex items-center gap-2">
                 <FileDown className="h-4 w-4" />
-                {loading ? 'Generating PDF...' : 'Export to PDF'}
+                {loading ? 'Generating...' : `Export ${selectedIds.size} Selected`}
               </Button>
             )}
           </PDFDownloadLink>
         )}
       </div>
-      
+
       {/* Search Bar */}
       <form onSubmit={handleSearch} className="mb-6">
         <div className="flex gap-2">
@@ -281,29 +187,9 @@ export default function History() {
             placeholder="Search by crop or disease name..."
             className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
           />
-          <button
-            type="submit"
-            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-          >
-            Search
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setSearchQuery('');
-              loadHistory();
-            }}
-            className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
-          >
-            Reset
-          </button>
-          <button
-            type="button"
-            onClick={handleClearAll}
-            className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
-          >
-            Clear All
-          </button>
+          <button type="submit" className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">Search</button>
+          <button type="button" onClick={() => { setSearchQuery(''); loadHistory(); }} className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">Reset</button>
+          <button type="button" onClick={handleClearAll} className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">Clear All</button>
         </div>
       </form>
 
@@ -318,46 +204,55 @@ export default function History() {
           <p className="text-gray-600">No diagnosis history found.</p>
         </div>
       ) : (
-        <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date & Time
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Crop
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Disease
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Confidence
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {history.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {formatDate(item.timestamp)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                      {item.crop_name}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {item.disease_name.replace(/_/g, ' ')}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {(item.confidence * 100).toFixed(1)}%
-                  </td>
+        <>
+          {selectedIds.size > 0 && (
+            <p className="text-sm text-emerald-700 mb-3 font-medium">{selectedIds.size} item(s) selected — click "Export Selected" to download PDF.</p>
+          )}
+          <div className="bg-white shadow-md rounded-lg overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.size === history.length && history.length > 0}
+                      onChange={toggleSelectAll}
+                      className="w-4 h-4 accent-emerald-600 cursor-pointer"
+                    />
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Crop</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Disease</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Confidence</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {history.map((item) => (
+                  <tr
+                    key={item.id}
+                    onClick={() => toggleSelect(item.id)}
+                    className={`cursor-pointer transition-colors ${selectedIds.has(item.id) ? 'bg-emerald-50' : 'hover:bg-gray-50'}`}
+                  >
+                    <td className="px-4 py-4" onClick={e => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(item.id)}
+                        onChange={() => toggleSelect(item.id)}
+                        className="w-4 h-4 accent-emerald-600 cursor-pointer"
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatDate(item.timestamp)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">{item.crop_name}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.disease_name.replace(/_/g, ' ')}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{(item.confidence * 100).toFixed(1)}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   );

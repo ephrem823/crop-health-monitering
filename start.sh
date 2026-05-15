@@ -5,7 +5,11 @@ echo "Starting Crop Health Monitoring System..."
 # Start backend
 echo "Starting backend server..."
 cd backend
-python3 -m uvicorn app.main:app --reload --port 8000 &
+if [ -x "../.venv/bin/python" ]; then
+  PYTHONPATH=. ../.venv/bin/python -m uvicorn app.main:app --reload --port 8000 &
+else
+  PYTHONPATH=. python3 -m uvicorn app.main:app --reload --port 8000 &
+fi
 BACKEND_PID=$!
 cd ..
 
@@ -20,11 +24,10 @@ FRONTEND_PID=$!
 cd ..
 
 echo ""
-echo "✅ Servers started!"
+echo "Servers started"
 echo "Backend: http://localhost:8000"
 echo "Frontend: http://localhost:3000"
 echo ""
-echo "Press Ctrl+C to stop both servers"
 
 # Wait for Ctrl+C
 trap "kill $BACKEND_PID $FRONTEND_PID; exit" INT

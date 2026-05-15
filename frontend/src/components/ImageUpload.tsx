@@ -109,9 +109,9 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onImageSelect, isLoading }) =
             <p className="text-slate-500 text-center mb-2 max-w-sm">
               Drag and drop your leaf photo here, or click to browse files. Supports JPG, PNG.
             </p>
-            <p className="text-xs text-amber-600 text-center mb-6 font-medium">
-              ⚠️ Only Maize, Potato, and Tomato crops are supported
-            </p>
+            <p className="text-xs text-emerald-600 text-center mb-6 font-medium">
+              Supports 50 classes of crop diseases
+                 </p>
             
             <Button 
               onClick={() => inputRef.current?.click()}
@@ -130,27 +130,6 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onImageSelect, isLoading }) =
               <Camera className="mr-2" size={18} />
               Take Photo
             </Button>
-
-            <div className="mt-8 flex gap-4">
-              <div className="flex flex-col items-center">
-                <div className="w-12 h-12 rounded-lg bg-emerald-50 border border-emerald-100 p-1">
-                  <img src="https://storage.googleapis.com/dala-prod-public-storage/generated-images/d3d4fd6e-4ec2-495c-9352-1553c53ec539/maize-leaf-026753fa-1773666023051.webp" className="w-full h-full object-cover rounded" />
-                </div>
-                <span className="text-[10px] text-slate-400 mt-1">Maize</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <div className="w-12 h-12 rounded-lg bg-emerald-50 border border-emerald-100 p-1">
-                  <img src="https://storage.googleapis.com/dala-prod-public-storage/generated-images/d3d4fd6e-4ec2-495c-9352-1553c53ec539/potato-leaf-61672ff0-1773666022947.webp" className="w-full h-full object-cover rounded" />
-                </div>
-                <span className="text-[10px] text-slate-400 mt-1">Potato</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <div className="w-12 h-12 rounded-lg bg-emerald-50 border border-emerald-100 p-1">
-                  <img src="https://storage.googleapis.com/dala-prod-public-storage/generated-images/d3d4fd6e-4ec2-495c-9352-1553c53ec539/tomato-leaf-d7579323-1773666022574.webp" className="w-full h-full object-cover rounded" />
-                </div>
-                <span className="text-[10px] text-slate-400 mt-1">Tomato</span>
-              </div>
-            </div>
           </div>
         ) : (
           <div className="relative p-6">
@@ -178,7 +157,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onImageSelect, isLoading }) =
                 <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex flex-col items-center justify-center">
                   <Loader2 className="h-10 w-10 text-emerald-600 animate-spin mb-4" />
                   <p className="font-medium text-emerald-900">Analyzing Crop Health...</p>
-                  <p className="text-sm text-slate-500">Our AI is processing the image</p>
+                  <p className="text-sm text-slate-500">processing the image</p>
                 </div>
               )}
             </div>

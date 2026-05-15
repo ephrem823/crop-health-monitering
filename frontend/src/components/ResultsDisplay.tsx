@@ -89,7 +89,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ result, onReset }) => {
                       </div>
                       
                       <div className="bg-white p-2 rounded border border-blue-100">
-                        <p className="text-xs font-semibold text-blue-700">🛡️ Prevention</p>
+                        <p className="text-xs font-semibold text-blue-700"> Prevention</p>
                         <p className="text-sm text-slate-700 mt-1">{result.enhanced_treatment.prevention}</p>
                       </div>
                     </div>

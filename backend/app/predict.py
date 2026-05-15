@@ -14,17 +14,17 @@ from app.config import IMG_SIZE, CLASS_NAMES, TREATMENT_ADVICE, HEALTHY_ADVICE
 def preprocess_image(file_bytes: bytes) -> tuple[Image.Image, np.ndarray]:
     """
     Convert raw image bytes into:
-      - a PIL Image (used later for Grad-CAM overlay)
-      - a preprocessed numpy array ready for model inference
+      - the original PIL image (used later for Grad-CAM overlay)
+      - a resized numpy array ready for model inference
     """
-    image = Image.open(io.BytesIO(file_bytes)).convert("RGB")
-    image = image.resize(IMG_SIZE)
+    original_image = Image.open(io.BytesIO(file_bytes)).convert("RGB")
+    resized_image = original_image.resize(IMG_SIZE)
 
-    img_array = np.array(image, dtype=np.float32)      # shape: (240, 240, 3)
-    img_array = np.expand_dims(img_array, axis=0)      # shape: (1, 240, 240, 3)
+    img_array = np.array(resized_image, dtype=np.float32)      # shape: (240, 240, 3)
+    img_array = np.expand_dims(img_array, axis=0)              # shape: (1, 240, 240, 3)
     # Model has built-in preprocessing (rescaling layer), no need for manual preprocessing
 
-    return image, img_array
+    return original_image, img_array
 
 
 def run_inference(model, img_array: np.ndarray) -> tuple[str, float, int]:

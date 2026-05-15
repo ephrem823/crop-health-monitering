@@ -10,7 +10,7 @@ const About: React.FC = () => {
           <h2 className="text-3xl font-bold text-emerald-900 sm:text-4xl mb-4">About EthioCrop Health</h2>
           <div className="h-1.5 w-24 bg-emerald-600 mx-auto rounded-full" />
           <p className="text-lg text-slate-600 mt-6">
-            We are dedicated to revolutionizing Ethiopian agriculture through cutting-edge Artificial Intelligence.
+            We are dedicated to revolutionizing Ethiopian agriculture through cutting edge Artificial Intelligence.
           </p>
         </div>
 
@@ -24,18 +24,8 @@ const About: React.FC = () => {
               By leveraging the EfficientNet-B0 architecture and Explainable AI (XAI), we build trust and transparency in digital solutions.
             </p>
             
-            <div className="flex gap-4 pt-4">
-              <div className="flex flex-col items-center text-center p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex-1">
-                <Users size={24} className="text-emerald-600 mb-2" />
-                <span className="text-sm font-bold text-emerald-900">5,000+</span>
-                <span className="text-[10px] text-slate-500 uppercase tracking-wider">Farmers Target</span>
-              </div>
-              <div className="flex flex-col items-center text-center p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex-1">
-                <ShieldCheck size={24} className="text-emerald-600 mb-2" />
-                <span className="text-sm font-bold text-emerald-900">95%</span>
-                <span className="text-[10px] text-slate-500 uppercase tracking-wider">Target Accuracy</span>
-              </div>
-            </div>
+            
+            
           </div>
 
           <div className="relative">
@@ -46,8 +36,8 @@ const About: React.FC = () => {
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-2xl shadow-xl border border-emerald-50 max-w-[200px]">
-              <Microscope className="text-emerald-600 mb-2" size={32} />
+            <div className="absolute left-1/1000000 -translate-x-2/1 bottom-[-20px] bg-white p-10 rounded-4xl shadow-xl border border-emerald-50 max-w-[220px]">
+              <Microscope className="text-emerald-600 mb-2" size={28} />
               <p className="text-xs text-slate-600 font-medium">Powered by Deep Learning & Grad-CAM Visualization</p>
             </div>
           </div>
@@ -79,6 +69,15 @@ const About: React.FC = () => {
               </div>
               <h4 className="font-bold text-emerald-900 mb-2">Tomato</h4>
               <p className="text-sm text-slate-500 leading-snug">Targeting Bacterial Spot, Late Blight, and Septoria Leaf Spot.</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="h-10 w-10 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 mb-4">
+                <Leaf size={20} />
+              </div>
+              <h4 className="font-bold text-emerald-900 mb-2">And other morethan 20 crops </h4>
+              <p className="text-sm text-slate-500 leading-snug">Are incuded in this application</p>
             </CardContent>
           </Card>
         </div>

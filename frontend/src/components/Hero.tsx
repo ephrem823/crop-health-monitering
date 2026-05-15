@@ -20,11 +20,10 @@ const Hero: React.FC<HeroProps> = ({ onStart }) => {
   return (
     <div className="relative overflow-hidden bg-white pt-16 pb-24 lg:pt-32 lg:pb-40">
       {/* Database Info Badge */}
-      {dbCount !== null && (
+      {dbCount !== null && ( 
         <div className="absolute top-4 right-4 z-20">
           <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-md border border-emerald-200">
-            <Database className="h-4 w-4 text-emerald-600" />
-            <span className="text-sm font-medium text-emerald-900">{dbCount} diagnoses</span>
+            
           </div>
         </div>
       )}
@@ -49,18 +48,15 @@ const Hero: React.FC<HeroProps> = ({ onStart }) => {
               Empowering Ethiopian Farmers
             </span>
             <h1 className="text-4xl font-extrabold tracking-tight text-emerald-900 sm:text-6xl mb-6">
-              AI-Powered Crop Health <span className="text-emerald-600">Diagnosis</span>
+              AI Powerd Crop Health  <span className="text-emerald-600">Monitering</span>
             </h1>
             <p className="text-lg leading-8 text-slate-600 mb-10 max-w-2xl mx-auto">
-              Early detection is the key to food security. Use our advanced AI technology to identify diseases in Maize, Potato, and Tomato crops within seconds.
+              Early detection is the key to food security. Use our advanced AI to identify diseases across 50 classes in Coffee, Maize, Potato, Tomato, and more within seconds.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button size="lg" onClick={onStart} className="w-full sm:w-auto text-lg h-14 px-10">
                 Start Diagnosis
                 <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-              <Button variant="outline" size="lg" className="w-full sm:w-auto text-lg h-14 px-10">
-                Learn More
               </Button>
             </div>
           </motion.div>
