@@ -1,21 +1,19 @@
 # Crop Health Monitoring System
 
-AI-powered crop disease detection for Ethiopian farmers. Upload a leaf photo and get instant diagnosis with treatment advice.
+AI powered crop disease detection for Ethiopian farmers. Upload a leaf photo and get instant diagnosis with treatment advice.
 
 ---
 
 ## 📁 Project Structure
 
 ```
-ethio_crop_guard/
+CROP-HEALTH-MONITERING/
 ├── backend/                  # FastAPI backend
 │   ├── app/                  # API code
 │   └── models/               # Trained model (.h5)
 ├── frontend/                 # React frontend
 ├── ml_research/              # Training & datasets
-│   ├── data/                 # Dataset (train/val)
 │   ├── notebooks/            # Jupyter notebooks
-│   └── scripts/              # Training scripts
 └── start.ps1                 # Run script
 ```
 
@@ -34,8 +32,27 @@ This downloads and organizes:
 - **Potato** (3 classes): Healthy, Early Blight, Late Blight
 - **Tomato** (10 classes): Healthy, Bacterial Spot, Early Blight, Late Blight, Leaf Mold, Septoria Leaf Spot, Spider Mites, Target Spot, Yellow Leaf Curl Virus, Mosaic Virus
 - **Maize** (4 classes): Healthy, Common Rust, Gray Leaf Spot, Northern Leaf Blight
+Fruit Crops:
 
-**Total: 17 classes**
+-**Apple:** 4 classes (Scab, Black Rot, Rust, Healthy).
+
+-**Grape:** 4 classes (Black Rot, Esca, Leaf Blight, Healthy).
+
+Other Fruits: Includes Healthy/Diseased classes for Blueberry, Cherry, Orange, Peach, Raspberry, and Strawberry.
+
+Vegetables & Legumes:
+
+Pepper (Bell): 2 classes (Bacterial Spot, Healthy).
+
+Others: Includes Squash and Soybean categories.
+
+System Validation Classes:
+
+NOT_A_PLANT: Used to filter out non-agricultural images and prevent false positives.
+
+test: A dedicated class used for internal verification.
+
+**Total: 50 classes**
 
 ---
 
@@ -54,7 +71,7 @@ cd ml_research/scripts
 python train.py
 ```
 
-Model saves to: `backend/models/crop_health_model.h5`
+Model saves to: `backend/models/crop_health_model_fixed.h5`
 
 ---
 
@@ -72,13 +89,11 @@ This starts:
 
 ## 🌾 Supported Crops
 
-| Crop   | Classes |
-|--------|---------|
-| Maize  | 4       |
-| Potato | 3       |
-| Tomato | 10      |
-
-**Total: 17 disease classes**
+Crop Category,Key Supported Varieties
+Major Staples,"Maize (4 classes), Potato (3 classes), Tomato (10 classes) "
+Regional Specialty,"Coffee (4 classes: Cerscospora, Rust, Phoma, Healthy), Enset (Bacterial Wilt) "
+Horticulture,"Apple, Grape, Orange, Peach, Pepper, Strawberry "
+Validation,NOT_A_PLANT class to filter non-agricultural imagery 
 
 ---
 
@@ -120,7 +135,7 @@ SQLite database at `backend/app/database.db` stores:
 # View database records
 python view_database.py
 
-# Export to CSV
+# Export to pdf
 python export_database.py
 ```
 
@@ -156,7 +171,21 @@ VITE_API_URL=http://localhost:8000
 - **Database**: SQLite
 
 ---
+---
 
-## 📖 Documentation
+### 🤝 Contributing
 
-Model is trained on PlantVillage dataset with Ethiopian cultural context for treatment recommendations.
+
+### 👥 Group Members 
+
+This project was developed by:
+
+* **Biniyam Solomon**
+* **Murad Ali**
+* **Ephrem Alemayehu**
+* **Minase Mamacha**
+
+---
+### 📄 License
+
+This project is for educational purposes only and is not licensed for commercial use.
