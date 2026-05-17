@@ -13,9 +13,11 @@ RUN pip install --no-cache-dir -r requirements.txt huggingface_hub
 
 COPY backend/app/ ./app/
 
+ARG HF_TOKEN
 RUN python3 -c "\
 from huggingface_hub import hf_hub_download; \
-hf_hub_download(repo_id='efaxale/crop-health-model', filename='crop_health_model_fixed.h5', local_dir='/app/models')"
+hf_hub_download(repo_id='efaxale/crop-health-model', filename='crop_health_model_fixed.h5', 
+local_dir='/app/models', token='$HF_TOKEN')"
 
 ENV PYTHONPATH=/app
 ENV MODEL_PATH=/app/models/crop_health_model_fixed.h5
