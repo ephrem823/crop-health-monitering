@@ -1,3 +1,4 @@
+cat > backend/Dockerfile << 'EOF'
 FROM python:3.11-slim
 
 RUN apt-get update && apt-get install -y \
@@ -8,10 +9,10 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-COPY requirements.txt .
+COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt huggingface_hub
 
-COPY app/ ./app/
+COPY backend/app/ ./app/
 
 RUN python3 -c "\
 from huggingface_hub import hf_hub_download; \
@@ -23,3 +24,4 @@ ENV MODEL_PATH=/app/models/crop_health_model_fixed.h5
 EXPOSE 8000
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+EOF
