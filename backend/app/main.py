@@ -18,7 +18,7 @@ from app.gradcam import compute_gradcam, heatmap_to_base64
 from app.database import init_db, save_diagnosis, get_history, search_history, clear_all_history
 from app.gemini_service import get_enhanced_treatment
 
-# ── App setup 
+# ── App setup
 
 app = FastAPI(
     title="Crop Health Monitoring API",
@@ -28,7 +28,11 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # Restrict to your domain in production
+    allow_origins=[
+        "https://crop-health-monitering.vercel.app",
+        "https://crop-health-monitering-x1d8.vercel.app",
+    ],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -37,7 +41,7 @@ app.add_middleware(
 if os.path.exists("static"):
     app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
-# ── Model loading 
+# ── Model loading
 
 model: tf.keras.Model | None = None
 
@@ -48,7 +52,6 @@ def load_model():
     if os.path.exists(MODEL_PATH):
         model = tf.keras.models.load_model(MODEL_PATH, compile=False)
         print(f"Model loaded from {MODEL_PATH}")
-        # Warn about CPU-only inference speed
         gpus = tf.config.list_physical_devices('GPU')
         if not gpus:
             print(" No GPU detected — running on CPU. Predictions may take ~8s per image.")
@@ -57,7 +60,7 @@ def load_model():
     else:
         print(f"  Model file not found at '{MODEL_PATH}'. Run ml/train.py first.")
 
-# ── Routes ────────────────────────────────────────────────────────────────────
+# ── Routes
 
 @app.get("/api/health")
 def health_check():
@@ -69,13 +72,6 @@ def health_check():
 
 @app.post("/api/predict")
 async def predict(file: UploadFile = File(...)):
-    """
-    Accept a leaf image, run inference, and return:
-      - detected disease class
-      - confidence score
-      - treatment advice (basic + Gemini-enhanced)
-      - Grad-CAM heatmap overlay (base64 JPEG)
-    """
     content_type = file.content_type or ""
     if not content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Uploaded file must be an image.")
@@ -90,8 +86,7 @@ async def predict(file: UploadFile = File(...)):
         file_bytes = await file.read()
         pil_image, img_array = preprocess_image(file_bytes)
         class_name, confidence, class_idx = run_inference(model, img_array)
-        
-        # Check if model returned Unknown (index out of range)
+
         if class_name == "Unknown":
             return {
                 "class": "Unknown",
@@ -105,11 +100,9 @@ async def predict(file: UploadFile = File(...)):
                 "enhanced_treatment": None,
                 "heatmap": None,
             }
-        
-        # Check if confidence is too low (unknown crop)
-        CONFIDENCE_THRESHOLD = 0.75  # 75% minimum confidence
+
+        CONFIDENCE_THRESHOLD = 0.75
         if confidence < CONFIDENCE_THRESHOLD:
-            # Still save to database even for low confidence
             if "___" in class_name:
                 parts = class_name.split("___", 1)
                 crop_name = parts[0]
@@ -129,19 +122,19 @@ async def predict(file: UploadFile = File(...)):
                     f"This image might be:\n"
                     f"• Poor image quality (blurry, dark, or unclear)\n"
                     f"• Not a leaf image\n\n"
-                    f"Supported crops: Apple, Blueberry, Cherry, Coffee, Corn, Enset, Grape, Maize, Orange, Peach, Pepper, Potato, Raspberry, Soybean, Squash, Strawberry, Tomato.\n"
+                    f"Supported crops: Apple, Blueberry, Cherry, Coffee, Corn, Enset, Grape, Maize, Orange, 
+Peach, Pepper, Potato, Raspberry, Soybean, Squash, Strawberry, Tomato.\n"
                     f"Please upload a clear photo of a supported crop leaf."
                 ),
                 "enhanced_treatment": None,
                 "heatmap": heatmap_to_base64(pil_image, compute_gradcam(model, img_array, class_idx)),
                 "low_confidence": True,
             }
-        
+
         treatment = get_treatment(class_name)
         heatmap = compute_gradcam(model, img_array, class_idx)
         heatmap_b64 = heatmap_to_base64(pil_image, heatmap)
-        
-        # Save to database - handle both ___ and _ separators
+
         if "___" in class_name:
             parts = class_name.split("___", 1)
             crop_name = parts[0]
@@ -150,11 +143,10 @@ async def predict(file: UploadFile = File(...)):
             parts = class_name.split("_", 1)
             crop_name = parts[0]
             disease_name = parts[1] if len(parts) > 1 else "Unknown"
-        
+
         save_diagnosis(crop_name, disease_name, confidence)
         print(f" Saved to DB: {crop_name} | {disease_name} | {confidence:.2%}")
-        
-        # Get enhanced treatment from Gemini
+
         enhanced = get_enhanced_treatment(crop_name, disease_name, treatment)
 
         return {
@@ -167,24 +159,21 @@ async def predict(file: UploadFile = File(...)):
 
     except Exception as exc:
         import traceback
-        traceback.print_exc()  # Print full error to console
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(exc))
 
 
 @app.get("/api/history")
 def get_diagnosis_history(limit: int = 50):
-    """Get recent diagnosis history."""
     return {"history": get_history(limit)}
 
 
 @app.get("/api/search")
 def search_diagnosis(query: str):
-    """Search diagnosis history by crop or disease name."""
     return {"results": search_history(query)}
 
 
 @app.delete("/api/history")
 def delete_all_history():
-    """Clear all diagnosis history."""
     deleted = clear_all_history()
     return {"message": f"Deleted {deleted} records", "deleted": deleted}
