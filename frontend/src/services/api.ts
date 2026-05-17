@@ -1,7 +1,6 @@
 // All backend API calls live here.
 // Change VITE_API_URL in your .env file to point to your backend.
-
-const API_BASE = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_API_URL ?? "http://backend:8000";
 
 export interface PredictResponse {
   class: string;       // e.g. "Potato_Late_Blight"
