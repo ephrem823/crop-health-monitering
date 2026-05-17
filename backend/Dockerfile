@@ -1,6 +1,6 @@
+cat > backend/Dockerfile << 'EOF'
 FROM python:3.11-slim
 
-# System libraries needed by TensorFlow and OpenCV
 RUN apt-get update && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
@@ -9,15 +9,19 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Install Python dependencies first (better layer caching)
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt huggingface_hub
 
-# Copy app source (not venv, not models — those are mounted)
 COPY app/ ./app/
 
+RUN python3 -c "\
+from huggingface_hub import hf_hub_download; \
+hf_hub_download(repo_id='efaxale/crop-health-model', filename='crop_health_model_fixed.h5', local_dir='/app/models')"
+
 ENV PYTHONPATH=/app
+ENV MODEL_PATH=/app/models/crop_health_model_fixed.h5
 
 EXPOSE 8000
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+EOF
