@@ -33,7 +33,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-)
 
 # Serve the React build (production only)
 if os.path.exists("static"):
