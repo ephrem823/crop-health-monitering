@@ -1,6 +1,5 @@
 """
 Crop Health Monitoring System — FastAPI Backend
------------------------------------------------
 Entry point. Loads the model once at startup, then serves predictions.
 
 Run locally:
@@ -19,7 +18,7 @@ from app.gradcam import compute_gradcam, heatmap_to_base64
 from app.database import init_db, save_diagnosis, get_history, search_history, clear_all_history
 from app.gemini_service import get_enhanced_treatment
 
-# ── App setup ────────────────────────────────────────────────────────────────
+# ── App setup 
 
 app = FastAPI(
     title="Crop Health Monitoring API",
@@ -38,7 +37,7 @@ app.add_middleware(
 if os.path.exists("static"):
     app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
-# ── Model loading ─────────────────────────────────────────────────────────────
+# ── Model loading 
 
 model: tf.keras.Model | None = None
 

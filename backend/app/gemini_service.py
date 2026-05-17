@@ -1,6 +1,5 @@
 """
 Gemini AI Integration for Ethiopian Cultural Context
------------------------------------------------------
 Enhances treatment advice with:
 - Better Amharic translations
 - Traditional Ethiopian remedies

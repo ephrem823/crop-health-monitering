@@ -1,0 +1,28 @@
+services:
+  backend:
+    build: ./backend
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 1
+    container_name: crop_backend
+    restart: unless-stopped
+    volumes:
+      - ./backend/models:/app/models:ro
+      - crop_db:/app/data
+    env_file:
+      - ./backend/.env
+    environment:
+      - MODEL_PATH=/app/models/crop_health_model_fixed.h5
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: crop_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  crop_db:
