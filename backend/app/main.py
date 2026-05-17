@@ -122,8 +122,7 @@ async def predict(file: UploadFile = File(...)):
                     f"This image might be:\n"
                     f"• Poor image quality (blurry, dark, or unclear)\n"
                     f"• Not a leaf image\n\n"
-                    f"Supported crops: Apple, Blueberry, Cherry, Coffee, Corn, Enset, Grape, Maize, Orange, 
-Peach, Pepper, Potato, Raspberry, Soybean, Squash, Strawberry, Tomato.\n"
+                    f"Supported crops: Apple, Blueberry, Cherry, Coffee, Corn, Enset, Grape, Maize, Orange, Peach, Pepper, Potato, Raspberry, Soybean, Squash, Strawberry, Tomato.\n"
                     f"Please upload a clear photo of a supported crop leaf."
                 ),
                 "enhanced_treatment": None,
