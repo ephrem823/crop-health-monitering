@@ -28,13 +28,11 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://crop-health-monitering.vercel.app",
-        "https://crop-health-monitering-x1d8.vercel.app",
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
+)
 )
 
 # Serve the React build (production only)
