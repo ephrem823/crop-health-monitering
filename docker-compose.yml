@@ -4,9 +4,13 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 1
+    env_file:
+      - backend/.env
     environment:
       - MODEL_PATH=/app/models/crop_health_model_fixed.h5
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    volumes:
+      - ./backend/models:/app/models:ro
+      - crop_db:/app/data
     ports:
       - "8000:8000"
 
@@ -14,8 +18,11 @@ services:
     build:
       context: ./frontend
       args:
-        - VITE_API_URL=http://backend:8000
+        - VITE_API_URL=
     ports:
       - "80:80"
     depends_on:
       - backend
+
+volumes:
+  crop_db:
