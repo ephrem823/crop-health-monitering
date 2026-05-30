@@ -170,22 +170,6 @@ VITE_API_URL=http://localhost:8000
 - **AI**: Google Gemini API
 - **Database**: SQLite
 
----
----
-
-### 🤝 Contributing
-
-
-### 👥 Group Members 
-
-This project was developed by:
-
-* **Biniyam Solomon**
-* **Murad Ali**
-* **Ephrem Alemayehu**
-* **Minase Mamacha**
-
----
 ### 📄 License
 
 This project is for educational purposes only and is not licensed for commercial use.
