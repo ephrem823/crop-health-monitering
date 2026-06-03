@@ -1,149 +1,157 @@
 """
 Gemini AI Integration for Ethiopian Cultural Context
-Enhances treatment advice with:
-- Better Amharic translations
-- Traditional Ethiopian remedies
-- Organic/compost solutions
-- Local farming wisdom
 """
 
 import os
 from pathlib import Path
-from typing import Optional
+import google.generativeai as genai
+from google.generativeai.types import GenerationConfig
 
-# Load environment variables from .env file
 try:
     from dotenv import load_dotenv
-    env_path = Path(__file__).parent.parent / '.env'
-    load_dotenv(env_path)
+    load_dotenv(Path(__file__).parent.parent / '.env')
 except ImportError:
-    print("⚠️  python-dotenv not installed. Install with: pip install python-dotenv")
+    print("⚠️  python-dotenv not installed.")
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+MAX_INPUT_LENGTH = 500
 
-# Use new google.genai SDK
-try:
-    from google import genai
-    from google.genai import types
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+    _model = genai.GenerativeModel(
+        'gemini-1.5-flash',
+        generation_config=GenerationConfig(max_output_tokens=2048, temperature=0.4)
+    )
+    print("✅ Gemini API configured successfully")
+else:
+    _model = None
+    print("⚠️  GEMINI_API_KEY not set. Using basic treatment advice.")
 
-    if GEMINI_API_KEY:
-        client = genai.Client(api_key=GEMINI_API_KEY)
-        model = client
-        print("✅ Gemini API configured successfully (google.genai)")
-    else:
-        client = None
-        model = None
-        print("⚠️  GEMINI_API_KEY not set. Using basic treatment advice.")
-
-except ImportError:
-    client = None
-    model = None
-    print("⚠️  google-genai not installed. Run: pip install google-genai")
+_FALLBACK = {
+    "amharic": "የጀሚኒ ኤፒአይ ቁልፍ አልተዘጋጀም።",
+    "english": "",
+    "oromoo": "Gemini API hin qophaa'ine.",
+    "traditional": "",
+    "organic": "Use organic compost and natural pest control methods.",
+    "prevention": "Practice crop rotation and maintain good field hygiene.",
+}
 
 
+def _sanitize(text: str) -> str:
+    return text[:MAX_INPUT_LENGTH].strip()
+
+
+from functools import lru_cache
+
+@lru_cache(maxsize=50)
 def get_enhanced_treatment(crop_name: str, disease_name: str, base_treatment: str) -> dict:
-    """
-    Use Gemini to enhance treatment advice with:
-    - Amharic, English, and Afaan Oromoo translations
-    - Traditional Ethiopian remedies
-    - Organic/compost solutions
-    - Cultural context
-    """
+    if not _model:
+        return {**_FALLBACK, "english": base_treatment, "traditional": base_treatment}
 
-    if not client:
-        return {
-            "amharic": "የጀሚኒ ኤፒአይ ቁልፍ አልተዘጋጀም።",
-            "english": base_treatment,
-            "oromoo": "Gemini API hin qophaa'ine.",
-            "traditional": base_treatment,
-            "organic": "Use organic compost and natural pest control methods.",
-            "prevention": "Practice crop rotation and maintain good field hygiene."
-        }
+    crop_name = _sanitize(crop_name)
+    disease_name = _sanitize(disease_name)
+    base_treatment = _sanitize(base_treatment)
 
-    prompt = f"""You are an agricultural expert specializing in Ethiopian farming practices.
+    prompt = f"""You are a senior plant pathologist and agricultural scientist with 20+ years of field experience in tropical and subtropical crop diseases, specializing in Ethiopian agroecology.
 
-Crop: {crop_name}
-Disease: {disease_name}
-Basic Treatment: {base_treatment}
+Diagnosed Condition:
+- Crop: {crop_name}
+- Disease/Condition: {disease_name}
+- Initial Assessment: {base_treatment}
 
-Provide treatment advice in 6 sections:
+Provide expert-level treatment advice covering:
 
-1. AMHARIC: Translate the treatment advice to proper Amharic. Use natural Ethiopian farming language.
-2. ENGLISH: Provide clear treatment advice in simple English that farmers can understand.
-3. OROMOO: Translate the treatment advice to proper Afaan Oromoo.
-4. TRADITIONAL: Provide traditional Ethiopian remedies using local materials (neem/ኒም, wood ash/አመድ, garlic/ነጭ ሽንኩርት, chili pepper/በርበሬ).
-5. ORGANIC: Suggest organic and compost-based solutions from local materials.
-6. PREVENTION: Preventive measures for Ethiopian highland/lowland farming, considering rainy seasons (ክረምት/በልግ).
+1. PATHOGEN ANALYSIS & TREATMENT STRATEGY (in English)
+   - Identify the causal agent (fungal, bacterial, viral, nutritional, environmental)
+   - Explain the disease mechanism and spread pattern
+   - Recommend evidence-based chemical/biological controls with active ingredients, application rates, and timing
+   - Consider Ethiopian climate zones (highland kolla/weyna dega, lowland bereha)
 
-Format EXACTLY like this:
-AMHARIC: [text]
-ENGLISH: [text]
-OROMOO: [text]
-TRADITIONAL: [text]
-ORGANIC: [text]
-PREVENTION: [text]
+2. AMHARIC TRANSLATION
+   - Translate the core treatment advice into clear Amharic that Ethiopian smallholder farmers can understand
+   - Use agricultural terminology familiar in Ethiopian extension services
 
-Keep each section concise (2-3 sentences max)."""
+3. AFAAN OROMOO TRANSLATION
+   - Translate the core treatment advice into clear Afaan Oromoo
+   - Use terminology common in Oromia region agricultural practices
+
+4. TRADITIONAL & INDIGENOUS KNOWLEDGE
+   - Recommend proven Ethiopian traditional remedies using locally available materials:
+     * Neem (ኒም/Neem) extracts and application methods
+     * Wood ash (አመድ/daaraa) for pH adjustment and pest deterrence
+     * Garlic/chili (ነጭ ሽንኩርት/qullubbii adii, በርበሬ/barbaree) infusions
+     * Biological controls from indigenous plants
+   - Cite traditional farming wisdom from Ethiopian highland/lowland practices
+
+5. ORGANIC & AGROECOLOGICAL SOLUTIONS
+   - Recommend certified organic treatments (OMRI-listed or equivalent)
+   - Compost tea preparation and beneficial microbe inoculation
+   - Integrated Pest Management (IPM) strategies
+   - Crop diversification and companion planting specific to Ethiopian crops
+
+6. PREVENTION & INTEGRATED MANAGEMENT
+   - Preventive measures considering Ethiopian rainy seasons (Kiremt/ክረምት, Belg/በልግ)
+   - Crop rotation schedules suitable for Ethiopian smallholder farms (0.5-2 hectares)
+   - Water management during rainy and dry seasons
+   - Early warning signs and scouting protocols
+   - Post-harvest residue management
+
+Format your response EXACTLY as:
+
+ENGLISH: [Comprehensive expert advice, 4-6 sentences with specific active ingredients, dosages, and scientific rationale]
+
+AMHARIC: [Clear practical translation, 3-4 sentences]
+
+OROMOO: [Clear practical translation, 3-4 sentences]
+
+TRADITIONAL: [Detailed traditional remedy protocols with preparation and application instructions, 3-4 sentences]
+
+ORGANIC: [Specific organic treatment recommendations with application rates and frequency, 3-4 sentences]
+
+PREVENTION: [Integrated prevention strategy with seasonal timing and cultural practices, 3-4 sentences]
+
+Be specific, actionable, and scientifically rigorous. Prioritize solutions accessible to Ethiopian smallholder farmers."""
 
     try:
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=prompt,
-        )
-        text = response.text.strip()
-
-        sections = {
-            "amharic": "", "english": "", "oromoo": "",
-            "traditional": "", "organic": "", "prevention": ""
-        }
-
-        current_section = None
-        for line in text.split('\n'):
-            line = line.strip()
-            if line.startswith('AMHARIC:'):
-                current_section = 'amharic'
-                sections['amharic'] = line.replace('AMHARIC:', '').strip()
-            elif line.startswith('ENGLISH:'):
-                current_section = 'english'
-                sections['english'] = line.replace('ENGLISH:', '').strip()
-            elif line.startswith('OROMOO:'):
-                current_section = 'oromoo'
-                sections['oromoo'] = line.replace('OROMOO:', '').strip()
-            elif line.startswith('TRADITIONAL:'):
-                current_section = 'traditional'
-                sections['traditional'] = line.replace('TRADITIONAL:', '').strip()
-            elif line.startswith('ORGANIC:'):
-                current_section = 'organic'
-                sections['organic'] = line.replace('ORGANIC:', '').strip()
-            elif line.startswith('PREVENTION:'):
-                current_section = 'prevention'
-                sections['prevention'] = line.replace('PREVENTION:', '').strip()
-            elif current_section and line:
-                sections[current_section] += ' ' + line
-
-        return sections
-
+        response = _model.generate_content(prompt)
+        return _parse_response(response.text.strip(), base_treatment)
     except Exception as e:
         print(f"Gemini API error: {e}")
-        return {
-            "amharic": "የጀሚኒ ኤፒአይ ስህተት።",
-            "english": base_treatment,
-            "oromoo": "Dogoggora Gemini API.",
-            "traditional": base_treatment,
-            "organic": "Use organic compost and natural pest control methods.",
-            "prevention": "Practice crop rotation and maintain good field hygiene."
-        }
+        return {**_FALLBACK, "english": base_treatment, "traditional": base_treatment,
+                "amharic": "የጀሚኒ ኤፒአይ ስህተት።", "oromoo": "Dogoggora Gemini API."}
+
+
+def _parse_response(text: str, base_treatment: str) -> dict:
+    sections = {k: "" for k in ["amharic", "english", "oromoo", "traditional", "organic", "prevention"]}
+    key_map = {
+        "AMHARIC": "amharic", "ENGLISH": "english", "OROMOO": "oromoo",
+        "TRADITIONAL": "traditional", "ORGANIC": "organic", "PREVENTION": "prevention"
+    }
+    current = None
+    for line in text.split('\n'):
+        line = line.strip()
+        matched = False
+        for prefix, key in key_map.items():
+            if line.startswith(f"{prefix}:"):
+                current = key
+                sections[key] = line[len(prefix)+1:].strip()
+                matched = True
+                break
+        if not matched and current and line:
+            sections[current] += ' ' + line
+
+    if not sections["english"]:
+        sections["english"] = base_treatment
+    return sections
 
 
 def translate_to_amharic(text: str) -> str:
-    """Simple translation helper for any text."""
-    if not client:
+    if not _model:
         return text
     try:
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=f"Translate this agricultural advice to natural Amharic that Ethiopian farmers understand: {text}",
+        response = _model.generate_content(
+            f"Translate this agricultural advice to natural Amharic: {_sanitize(text)}",
         )
         return response.text.strip()
-    except:
+    except Exception:
         return text

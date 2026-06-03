@@ -1,13 +1,11 @@
 import os
 from pathlib import Path
 
-# Get the directory where this config.py file is located
 BASE_DIR = Path(__file__).resolve().parent.parent  # backend/
 
-IMG_SIZE = (240, 240)          # Input size expected by PlantDiseaseProV1
+IMG_SIZE = (240, 240)
 MODEL_PATH = str(BASE_DIR / "models" / "crop_health_model_fixed.h5")
 
-# Every class the model can predict (order must match training labels)
 CLASS_NAMES = [
     "Apple___Apple_scab",
     "Apple___Black_rot",
@@ -61,7 +59,8 @@ CLASS_NAMES = [
     "test",
 ]
 
-# Treatment advice keyed by class name (Ethiopian cultural context)
+HEALTHY_ADVICE = "Your plant looks healthy! Continue regular watering and balanced nutrient management."
+
 TREATMENT_ADVICE: dict[str, str] = {
     # Coffee
     "Coffee___Cerscospora": "Apply copper-based fungicides. Remove infected leaves. Improve air circulation.",
@@ -105,7 +104,7 @@ TREATMENT_ADVICE: dict[str, str] = {
     "NOT_A_PLANT": "⚠️ This image does not appear to be a plant leaf. Please upload a clear crop leaf photo.",
     "test": "This is a test class. Please upload a real crop leaf image.",
     # Healthy classes
-    "Apple___healthy": HEALTHY_ADVICE if False else "Your Apple plant looks healthy! Maintain regular watering, balanced fertilization, and monitor for early signs of disease.",
+    "Apple___healthy": "Your Apple plant looks healthy! Maintain regular watering, balanced fertilization, and monitor for early signs of disease.",
     "Blueberry___healthy": "Your Blueberry plant looks healthy! Maintain acidic soil pH (4.5-5.5) and consistent moisture.",
     "Cherry_(including_sour)___healthy": "Your Cherry plant looks healthy! Prune annually and monitor for pests.",
     "Coffee___Healthy": "Your Coffee plant looks healthy! ቡናዎ ጤናማ ነው። Maintain shade, proper drainage, and regular pruning.",
@@ -121,6 +120,3 @@ TREATMENT_ADVICE: dict[str, str] = {
     "Strawberry___healthy": "Your Strawberry looks healthy! Maintain mulching and remove runners regularly.",
     "Tomato___healthy": "የቲማቲምዎ ጤናማ ነው። Your Tomato is healthy! Continue staking, regular watering, and monitor for pests.",
 }
-
-# Default message for healthy plants
-HEALTHY_ADVICE = "Your plant looks healthy! Continue regular watering and balanced nutrient management."

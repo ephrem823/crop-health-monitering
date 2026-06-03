@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "EthioCrop Health",
+    "slug": "ethiocrop-mobile",
+    "version": "1.0.0",
+    "scheme": "ethiocrop",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#064e3b"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.haramaya.ethiocrop",
+      "infoPlist": {
+        "NSCameraUsageDescription": "EthioCrop needs camera access to capture leaf photos for disease diagnosis.",
+        "NSPhotoLibraryUsageDescription": "EthioCrop needs photo library access to select leaf images for diagnosis."
+      }
+    },
+    "android": {
+      "adaptiveIcon": { "backgroundColor": "#064e3b" },
+      "package": "com.haramaya.ethiocrop",
+      "permissions": ["CAMERA", "READ_EXTERNAL_STORAGE", "WRITE_EXTERNAL_STORAGE"]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-camera",
+      ["expo-image-picker", {
+        "photosPermission": "EthioCrop needs access to your photos for leaf diagnosis.",
+        "cameraPermission": "EthioCrop needs camera access to capture leaf photos."
+      }],
+      "expo-asset",
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

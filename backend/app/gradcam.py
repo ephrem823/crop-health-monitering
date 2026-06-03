@@ -7,19 +7,16 @@ the model focused on when making its prediction.
 
 import numpy as np
 import tensorflow as tf
+import keras
 from PIL import Image
 import io
 import base64
 
 
-def compute_gradcam(model: tf.keras.Model, img_array: np.ndarray, pred_index: int) -> np.ndarray:
-    """
-    Compute a Grad-CAM heatmap for the given image and predicted class.
-    Returns a 2-D float array (heatmap) with values in [0, 1].
-    """
+def compute_gradcam(model, img_array: np.ndarray, pred_index: int) -> np.ndarray:
     try:
         def find_last_conv(layer):
-            if isinstance(layer, tf.keras.layers.Conv2D):
+            if isinstance(layer, keras.layers.Conv2D):
                 return layer
             if hasattr(layer, "layers") and layer.layers:
                 for child in reversed(layer.layers):
@@ -37,9 +34,7 @@ def compute_gradcam(model: tf.keras.Model, img_array: np.ndarray, pred_index: in
         if last_conv_layer is None:
             return np.ones((7, 7)) * 0.5
 
-        print(f"Grad-CAM: Using layer '{last_conv_layer.name}'")
-
-        grad_model = tf.keras.Model(
+        grad_model = keras.Model(
             inputs=model.inputs,
             outputs=[last_conv_layer.output, model.output],
         )

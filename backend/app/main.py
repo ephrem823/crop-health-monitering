@@ -1,180 +1,156 @@
 """
 Crop Health Monitoring System — FastAPI Backend
-Entry point. Loads the model once at startup, then serves predictions.
-
-Run locally:
-    uvicorn backend.app.main:app --reload --port 8000
 """
 
 import os
+os.environ['TF_USE_LEGACY_KERAS'] = '0'
 import asyncio
-import numpy as np
+from concurrent.futures import ThreadPoolExecutor
 import tensorflow as tf
+import keras
+import numpy as np
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.concurrency import run_in_threadpool
 
-from app.config import MODEL_PATH, IMG_SIZE
+_executor = ThreadPoolExecutor(max_workers=2)
+
+# Set determinism for reproducible predictions
+keras.utils.set_random_seed(42)
+
+from app.config import MODEL_PATH
 from app.predict import preprocess_image, run_inference, get_treatment
 from app.gradcam import compute_gradcam, heatmap_to_base64
 from app.database import init_db, save_diagnosis, get_history, search_history, clear_all_history
 from app.gemini_service import get_enhanced_treatment
 
-# ── App setup ─────────────────────────────────────────────────────────────────
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
+CONFIDENCE_THRESHOLD = 0.75
 
 app = FastAPI(
     title="Crop Health Monitoring API",
-    description="AI powered crop disease detection for Ethiopian farmers.",
+    description="AI-powered crop disease detection for Ethiopian farmers.",
     version="1.0.0",
 )
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=False,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"],
-    max_age=600,
 )
 
-# Serve the React build (production only)
 if os.path.exists("static"):
     app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
-# ── Model loading ─────────────────────────────────────────────────────────────
 
-model: tf.keras.Model | None = None
+class ModelState:
+    model = None
+
 
 @app.on_event("startup")
 def load_model():
-    global model
     init_db()
     if os.path.exists(MODEL_PATH):
-        model = tf.keras.models.load_model(MODEL_PATH, compile=False)
-        print(f"Model loaded from {MODEL_PATH}")
-
-        # Warm up the model — eliminates 20s delay on first real prediction
-        print("Warming up model...")
-        h, w = IMG_SIZE
-        dummy = np.zeros((1, h, w, 3), dtype=np.float32)
-        model.predict(dummy, verbose=0)
-        print("Model warmed up ✓ — first prediction will now be fast.")
-
-        gpus = tf.config.list_physical_devices('GPU')
-        if not gpus:
-            print("No GPU detected — running on CPU.")
-        else:
-            print(f"GPU detected: {gpus}")
+        ModelState.model = keras.models.load_model(MODEL_PATH, compile=False)
+        print(f"✅ Model loaded from {MODEL_PATH}")
     else:
-        print(f"Model file not found at '{MODEL_PATH}'. Run ml/train.py first.")
+        print(f"⚠️  Model not found at '{MODEL_PATH}'.")
 
-# ── Helper ────────────────────────────────────────────────────────────────────
-
-def _parse_class_name(class_name: str) -> tuple[str, str]:
-    """Split class name into crop and disease parts."""
-    sep = "___" if "___" in class_name else "_"
-    parts = class_name.split(sep, 1)
-    crop_name = parts[0]
-    disease_name = parts[1] if len(parts) > 1 else "Unknown"
-    return crop_name, disease_name
-
-# ── Routes ────────────────────────────────────────────────────────────────────
 
 @app.get("/api/health")
 def health_check():
+    return {"status": "running", "model_loaded": ModelState.model is not None}
+
+
+def _low_confidence_response(class_name: str, confidence: float, img_array: np.ndarray):
+    heatmap = compute_gradcam(ModelState.model, img_array, 0)
+    from PIL import Image
+    import io
     return {
-        "status": "running",
-        "model_loaded": model is not None,
+        "class": "Unknown",
+        "confidence": round(confidence, 4),
+        "treatment": (
+            f"⚠️ Low Confidence Detection ({confidence*100:.1f}%)\n\n"
+            f"Detected '{class_name}' but confidence is too low.\n"
+            "Please upload a clear photo of a supported crop leaf."
+        ),
+        "enhanced_treatment": None,
+        "heatmap": None,
     }
 
 
 @app.post("/api/predict")
 async def predict(file: UploadFile = File(...)):
-    """
-    Accept a leaf image, run inference, and return:
-      - detected disease class
-      - confidence score
-      - treatment advice (basic + Gemini-enhanced)
-      - Grad-CAM heatmap overlay (base64 JPEG)
-    """
-    content_type = file.content_type or ""
-    if not content_type.startswith("image/"):
+    if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Uploaded file must be an image.")
 
-    if model is None:
-        raise HTTPException(
-            status_code=503,
-            detail="Model is not loaded. Please train the model first (run ml/train.py).",
-        )
+    if ModelState.model is None:
+        raise HTTPException(status_code=503, detail="Model is not loaded.")
+
+    file_bytes = await file.read()
+
+    if len(file_bytes) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=413, detail="File too large. Maximum size is 10MB.")
 
     try:
-        file_bytes = await file.read()
+        pil_image, img_array = preprocess_image(file_bytes)
+        class_name, confidence, class_idx = run_inference(ModelState.model, img_array)
 
-        # Run heavy CPU work in threadpool so it doesn't block the event loop
-        pil_image, img_array = await run_in_threadpool(preprocess_image, file_bytes)
-        class_name, confidence, class_idx = await run_in_threadpool(run_inference, model, img_array)
-
-        # Unknown class
         if class_name == "Unknown":
             return {
                 "class": "Unknown",
                 "confidence": round(confidence, 4),
-                "treatment": (
-                    "Model Configuration Error\n\n"
-                    "The model predicted a class that doesn't exist in the system. "
-                    "Please retrain the model or check the CLASS_NAMES configuration."
-                ),
+                "treatment": "Model configuration error. Please retrain the model.",
                 "enhanced_treatment": None,
                 "heatmap": None,
             }
 
-        crop_name, disease_name = _parse_class_name(class_name)
-
-        # Low confidence
-        CONFIDENCE_THRESHOLD = 0.75
         if confidence < CONFIDENCE_THRESHOLD:
-            save_diagnosis(crop_name, disease_name, confidence)
-            print(f"Low confidence saved: {crop_name} | {disease_name} | {confidence:.2%}")
-
-            # Still compute heatmap in threadpool
-            heatmap_b64 = await run_in_threadpool(
-                lambda: heatmap_to_base64(pil_image, compute_gradcam(model, img_array, class_idx))
-            )
+            parts = class_name.split("___") if "___" in class_name else class_name.split("_")
+            save_diagnosis(parts[0], "_".join(parts[1:]) or "Unknown", confidence)
+            heatmap_b64 = heatmap_to_base64(pil_image, compute_gradcam(ModelState.model, img_array, class_idx))
             return {
-                "class": class_name,
+                "class": "Unknown",
                 "confidence": round(confidence, 4),
                 "treatment": (
-                    f"Low Confidence Detection ({confidence*100:.1f}%)\n\n"
-                    f"The model detected '{class_name}' but with very low confidence. "
-                    f"This image might be:\n"
-                    f"• Poor image quality (blurry, dark, or unclear)\n"
-                    f"• Not a leaf image\n\n"
-                    f"Supported crops: Apple, Blueberry, Cherry, Coffee, Corn, Enset, Grape, "
-                    f"Maize, Orange, Peach, Pepper, Potato, Raspberry, Soybean, Squash, Strawberry, Tomato.\n"
-                    f"Please upload a clear photo of a supported crop leaf."
+                    f"⚠️ Low Confidence ({confidence*100:.1f}%)\n\n"
+                    f"Detected '{class_name}' with low confidence.\n"
+                    "Please upload a clear photo of a supported crop leaf."
                 ),
                 "enhanced_treatment": None,
                 "heatmap": heatmap_b64,
-                "low_confidence": True,
             }
 
-        # Run Grad-CAM and Gemini concurrently to save time
         treatment = get_treatment(class_name)
 
-        gradcam_task = run_in_threadpool(
-            lambda: heatmap_to_base64(pil_image, compute_gradcam(model, img_array, class_idx))
-        )
-        gemini_task = run_in_threadpool(
-            get_enhanced_treatment, crop_name, disease_name, treatment
-        )
+        parts = class_name.split("___") if "___" in class_name else class_name.split("_")
+        crop_name = parts[0]
+        disease_name = "_".join(parts[1:]) if len(parts) > 1 else "Unknown"
 
-        # Run both at the same time
-        heatmap_b64, enhanced = await asyncio.gather(gradcam_task, gemini_task)
+        # Save to history immediately before async operations
+        try:
+            saved_id = save_diagnosis(crop_name, disease_name, confidence)
+            print(f"✓ Saved diagnosis id={saved_id}: {crop_name} / {disease_name}")
+        except Exception as e:
+            print(f"✗ save_diagnosis failed: {e}")
 
-        save_diagnosis(crop_name, disease_name, confidence)
-        print(f"Saved to DB: {crop_name} | {disease_name} | {confidence:.2%}")
+        loop = asyncio.get_event_loop()
+        heatmap_future = loop.run_in_executor(_executor, lambda: heatmap_to_base64(pil_image, compute_gradcam(ModelState.model, img_array, class_idx)))
+        gemini_future = loop.run_in_executor(_executor, lambda: get_enhanced_treatment(crop_name, disease_name, treatment))
+
+        try:
+            heatmap_b64, enhanced = await asyncio.gather(heatmap_future, gemini_future, return_exceptions=True)
+            if isinstance(heatmap_b64, Exception):
+                print(f"Heatmap error: {heatmap_b64}")
+                heatmap_b64 = None
+            if isinstance(enhanced, Exception):
+                print(f"Gemini error: {enhanced}")
+                enhanced = None
+        except Exception as e:
+            print(f"Gather error: {e}")
+            heatmap_b64 = None
+            enhanced = None
 
         return {
             "class": class_name,
@@ -192,18 +168,15 @@ async def predict(file: UploadFile = File(...)):
 
 @app.get("/api/history")
 def get_diagnosis_history(limit: int = 50):
-    """Get recent diagnosis history."""
     return {"history": get_history(limit)}
 
 
 @app.get("/api/search")
 def search_diagnosis(query: str):
-    """Search diagnosis history by crop or disease name."""
     return {"results": search_history(query)}
 
 
 @app.delete("/api/history")
 def delete_all_history():
-    """Clear all diagnosis history."""
     deleted = clear_all_history()
     return {"message": f"Deleted {deleted} records", "deleted": deleted}

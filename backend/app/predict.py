@@ -40,7 +40,7 @@ def run_inference(model, img_array: np.ndarray) -> tuple[str, float, int]:
     
     # Safety check: ensure class_idx is within bounds
     if class_idx >= len(CLASS_NAMES):
-        print(f"⚠️  Model predicted class index {class_idx}, but only {len(CLASS_NAMES)} classes defined.")
+        print(f"  Model predicted class index {class_idx}, but only {len(CLASS_NAMES)} classes defined.")
         print(f"   Model output shape: {predictions.shape}")
         class_name = "Unknown"
     else:

@@ -1,175 +1,168 @@
-# Crop Health Monitoring System
+# 🌿 EthioCrop Health Monitoring System
 
-AI powered crop disease detection for Ethiopian farmers. Upload a leaf photo and get instant diagnosis with treatment advice.
-
----
-
-## 📁 Project Structure
-
-```
-CROP-HEALTH-MONITERING/
-├── backend/                  # FastAPI backend
-│   ├── app/                  # API code
-│   └── models/               # Trained model (.h5)
-├── frontend/                 # React frontend
-├── ml_research/              # Training & datasets
-│   ├── notebooks/            # Jupyter notebooks
-└── start.ps1                 # Run script
-```
+AI-powered crop disease detection for Ethiopian farmers. Take a leaf photo and get an instant diagnosis with expert treatment advice in **English**, **Amharic (አማርኛ)**, and **Afaan Oromoo**.
 
 ---
 
-## 🚀 Quick Start
+## Project Structure
 
-### 1. Download Dataset (First Time Only)
+```
+crop-health-monitering/
+├── backend/                  # FastAPI server + ML model
+│   ├── app/
+│   │   ├── main.py           # API entry point
+│   │   ├── config.py         # Class names & treatment advice
+│   │   ├── predict.py        # Image preprocessing & inference
+│   │   ├── gradcam.py        # Grad-CAM heatmap generation
+│   │   ├── database.py       # SQLite history management
+│   │   └── gemini_service.py # Gemini AI multilingual treatment
+│   ├── models/
+│   │   └── crop_health_model_fixed.h5
+│   ├── .env                  # API keys (not committed)
+│   └── requirements.txt
+├── mobile/                   # React Native (Expo) mobile app
+│   ├── app/
+│   │   ├── _layout.tsx
+│   │   └── (tabs)/
+│   │       ├── index.tsx     # Home screen
+│   │       ├── diagnosis.tsx # Camera + disease analysis
+│   │       ├── history.tsx   # Diagnosis history
+│   │       └── about.tsx     # About & team
+│   ├── components/
+│   │   └── ResultsDisplay.tsx
+│   ├── services/api.ts       # Backend API calls
+│   ├── types/diagnosis.ts    # TypeScript interfaces
+│   └── constants/Colors.ts   # App theme
+├── ml_research/
+│   └── notebooks/            # Model training notebooks
+├── start.local.sh            # Quick start script
+└── README.md
+```
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Mobile App | React Native, Expo SDK 54 |
+| Backend | FastAPI, Python 3.11 |
+| ML Model | TensorFlow 2.16, EfficientNet-B0 |
+| Explainability | Grad-CAM |
+| AI / NLP | Google Gemini Pro |
+| Database | SQLite |
+| Image Processing | OpenCV, Pillow |
+
+---
+
+## Setup & Installation
+
+### Prerequisites
+
+- Python 3.11
+- Node.js 18+
+- Expo Go app on your phone
+
+### 1. Backend
 
 ```bash
-cd ml_research
-python download_all_datasets.py
+cd backend
+python3.11 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 ```
 
-This downloads and organizes:
-- **Potato** (3 classes): Healthy, Early Blight, Late Blight
-- **Tomato** (10 classes): Healthy, Bacterial Spot, Early Blight, Late Blight, Leaf Mold, Septoria Leaf Spot, Spider Mites, Target Spot, Yellow Leaf Curl Virus, Mosaic Virus
-- **Maize** (4 classes): Healthy, Common Rust, Gray Leaf Spot, Northern Leaf Blight
-Fruit Crops:
+Create `backend/.env`:
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+```
 
--**Apple:** 4 classes (Scab, Black Rot, Rust, Healthy).
-
--**Grape:** 4 classes (Black Rot, Esca, Leaf Blight, Healthy).
-
-Other Fruits: Includes Healthy/Diseased classes for Blueberry, Cherry, Orange, Peach, Raspberry, and Strawberry.
-
-Vegetables & Legumes:
-
-Pepper (Bell): 2 classes (Bacterial Spot, Healthy).
-
-Others: Includes Squash and Soybean categories.
-
-System Validation Classes:
-
-NOT_A_PLANT: Used to filter out non-agricultural images and prevent false positives.
-
-test: A dedicated class used for internal verification.
-
-**Total: 50 classes**
-
----
-
-### 2. Train Model (First Time Only)
-
-**Option A: Jupyter Notebook (Recommended)**
+Start the backend:
 ```bash
-cd ml_research/notebooks
-jupyter notebook
-# Open train_model.ipynb and run all cells
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-**Option B: Python Script**
-```bash
-cd ml_research/scripts
-python train.py
-```
-
-Model saves to: `backend/models/crop_health_model_fixed.h5`
-
----
-
-### 3. Run the App
+### 2. Mobile App
 
 ```bash
-.\start.ps1
+cd mobile
+npm install
 ```
 
-This starts:
-- Backend: http://localhost:8000
-- Frontend: http://localhost:3000
-
----
-
-## 🌾 Supported Crops
-
-Crop Category,Key Supported Varieties
-Major Staples,"Maize (4 classes), Potato (3 classes), Tomato (10 classes) "
-Regional Specialty,"Coffee (4 classes: Cerscospora, Rust, Phoma, Healthy), Enset (Bacterial Wilt) "
-Horticulture,"Apple, Grape, Orange, Peach, Pepper, Strawberry "
-Validation,NOT_A_PLANT class to filter non-agricultural imagery 
-
----
-
-## 🔧 API Endpoints
-
-| Method | Path          | Description                  |
-|--------|---------------|------------------------------|
-| GET    | /api/health   | Check API status             |
-| POST   | /api/predict  | Upload image, get diagnosis  |
-| GET    | /api/history  | Get diagnosis history        |
-| GET    | /api/search   | Search history               |
-| DELETE | /api/history  | Clear all history            |
-
----
-
-## 💾 Database
-
-SQLite database at `backend/app/database.db` stores:
-- Diagnosis history
-- Crop and disease names
-- Confidence scores
-- Timestamps
-
----
-
-## 🤖 AI Features
-
-- **Model**: PlantDiseaseProV1 (EfficientNet-B0 based)
-- **Input Size**: 240×240 pixels
-- **Grad-CAM**: Visual explanation of predictions
-- **Gemini AI**: Enhanced treatment advice in Amharic
-- **Confidence Threshold**: Rejects unknown crops (<75%)
-
----
-
-## 📝 Utilities
-
+Find your machine's local IP:
 ```bash
-# View database records
-python view_database.py
-
-# Export to pdf
-python export_database.py
+ifconfig | grep "inet " | grep -v 127.0.0.1
 ```
+
+Update `mobile/services/api.ts`:
+```ts
+export const API_BASE = 'http://YOUR_IP:8000';
+```
+
+Start the app:
+```bash
+ulimit -n 65536 && npm start
+```
+
+Scan the QR code with **Expo Go** on your phone. Make sure your phone and Mac are on the same WiFi network.
 
 ---
 
-## 🔑 Environment Variables
+## API Reference
 
-**Backend** (`backend/.env`):
-```
-GEMINI_API_KEY=your_api_key_here
-```
-
-**Frontend** (`frontend/.env`):
-```
-VITE_API_URL=http://localhost:8000
-```
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/health` | Check API and model status |
+| POST | `/api/predict` | Upload leaf image, get diagnosis |
+| GET | `/api/history` | Get recent diagnosis history |
+| GET | `/api/search?query=` | Search history |
+| DELETE | `/api/history` | Clear all history |
 
 ---
 
-## 📚 Notebooks
+## Supported Crops — 50 Disease Classes
 
-- **train_model.ipynb**: Train new model from scratch
-- **evaluate_model.ipynb**: Load and evaluate existing model
+| Crop | Conditions |
+|------|-----------|
+| Coffee | Cercospora, Leaf Rust, Phoma, Healthy |
+| Enset | Bacterial Wilt, Healthy |
+| Maize / Corn | Common Rust, Gray Leaf Spot, Northern Leaf Blight, Blight, Healthy |
+| Potato | Early Blight, Late Blight, Healthy |
+| Tomato | Bacterial Spot, Early Blight, Late Blight, Leaf Mold, Septoria, Spider Mites, Target Spot, Yellow Leaf Curl Virus, Mosaic Virus, Healthy |
+| Apple | Scab, Black Rot, Cedar Rust, Healthy |
+| Grape | Black Rot, Esca, Leaf Blight, Healthy |
+| Peach | Bacterial Spot, Healthy |
+| Orange | Citrus Greening |
+| Strawberry | Leaf Scorch, Healthy |
+| Pepper | Bacterial Spot, Healthy |
+| Blueberry, Cherry, Raspberry, Soybean | Healthy |
+| Squash | Powdery Mildew |
 
 ---
 
-## 🛠️ Tech Stack
+## AI Features
 
-- **Backend**: FastAPI, TensorFlow, OpenCV
-- **Frontend**: React, TypeScript, Vite
-- **ML**: EfficientNet-B0, Grad-CAM
-- **AI**: Google Gemini API
-- **Database**: SQLite
+- **Model** — EfficientNet-B0 fine-tuned on 50 plant disease classes
+- **Input** — 240×240 pixels
+- **Confidence Threshold** — predictions below 75% are rejected
+- **Grad-CAM** — highlights which leaf regions influenced the prediction
+- **Gemini Pro** — generates expert treatment advice in Amharic, Afaan Oromoo, and English with traditional and organic remedy sections
 
-### 📄 License
+---
 
-This project is for educational purposes only and is not licensed for commercial use.
+## Team — Haramaya University
+
+| Name | Role |
+|------|------|
+| Biniyam Solomon | ML Model & Training |
+| Murad Ali | ML Model & Training |
+| Ephrem Alemayehu | Frontend & Backend API Integration |
+| Minase Mamacha | Data Collection & Evaluation |
+
+---
+
+*Built with ❤️ for Ethiopian farmers — ለኢትዮጵያ አርሶ አደሮች በፍቅር የተሰራ — Qonnaan bultootaa Itoophiyaaf jaalalaaan kan hojjetame*
+
+---
+
+> Educational purposes only — Not licensed for commercial use.

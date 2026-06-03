@@ -18,6 +18,8 @@ backend/models/*.h5
 backend/models/*.keras
 
 # Dataset (too large for git)
+ml_research/merged_dataset/
+ml_research/raw_data/
 ml_research/data/train/
 ml_research/data/val/
 
