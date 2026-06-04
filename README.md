@@ -155,9 +155,9 @@ Scan the QR code with **Expo Go** on your phone. Make sure your phone and Mac ar
 | Name | Role |
 |------|------|
 | Biniyam Solomon | ML Model & Training |
-| Murad Ali | ML Model & Training |
 | Ephrem Alemayehu | Frontend & Backend API Integration |
-| Minase Mamacha | Data Collection & Evaluation |
+| mulat Alameraw | Data Collection & Evaluation |
+|Nahom tewdros  | Backend API Integration |
 
 ---
 
